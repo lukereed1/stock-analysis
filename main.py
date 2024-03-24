@@ -46,13 +46,27 @@ def get_prev_4_year_prices(ticker, prev_years):
     return prev_4_year_prices_map
 
 
+def get_prev_4_year_pe_ratio(dates, eps, prices):
+    prev_4_year_pe_ratio = {}
+
+    for i in range(4):
+        pe_ratio = round(prices[i]/eps[i], 2)
+        prev_4_year_pe_ratio[dates[i]] = pe_ratio
+
+    return prev_4_year_pe_ratio
+
+
 ticker = "AAPL"
-
 historic_eps = get_prev_4_year_eps(ticker)
-historic_prices = get_prev_4_year_prices(ticker, historic_eps.keys())
+prev_years = list(historic_eps.keys())
 
-for k, v in historic_prices.items():
-    print(k, v)
+historic_prices = get_prev_4_year_prices(ticker, prev_years)
 
-for k, v in historic_eps.items():
-    print(k, v)
+prev_eps = list(historic_eps.values())
+prev_prices = list(historic_prices.values())
+
+historic_pe = get_prev_4_year_pe_ratio(prev_years, prev_eps, prev_prices)
+
+for k, v in historic_pe.items():
+    print(f"{k}: {v}")
+
