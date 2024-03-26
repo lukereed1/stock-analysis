@@ -167,5 +167,6 @@ def discounted_cash_flow_analysis(company, years, estimated_growth, mos_rate):
     buy_value = add_margin_of_safety(intrinsic_value, mos_rate)
     print(f"BUY RANGE INCLUDING MARGIN OF SAFETY: {buy_value}")
 
-discounted_cash_flow_analysis("AAPL", 10, 0.12, 25)
+
+discounted_cash_flow_analysis("AAPL", 10, 0.12, 0.25)
 
