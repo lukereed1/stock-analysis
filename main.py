@@ -21,7 +21,7 @@ def get_est_5yr_growth_rate(ticker):
     return si.get_analysts_info(ticker)['Growth Estimates'][ticker][4]
 
 
-def get_prev_4_year_eps(ticker):
+def get_historic_eps(ticker):
     company = yf.Ticker(ticker)
     income_statement = company.income_stmt
     prev_4_year_dates = income_statement.columns
@@ -29,12 +29,12 @@ def get_prev_4_year_eps(ticker):
 
     prev_4_year_eps_map = {}
     for i in range(4):
-        prev_4_year_eps_map[str(prev_4_year_dates[i]-pd.Timedelta(days=1))[:10]] = prev_4_year_eps_values.iloc[i]
+        prev_4_year_eps_map[str(prev_4_year_dates[i] - pd.Timedelta(days=1))[:10]] = prev_4_year_eps_values.iloc[i]
 
     return prev_4_year_eps_map
 
 
-def get_prev_4_year_prices(ticker, prev_years):
+def get_historic_prices(ticker, prev_years):
     company = yf.Ticker(ticker)
     history = company.history(period="4y")
 
@@ -46,27 +46,46 @@ def get_prev_4_year_prices(ticker, prev_years):
     return prev_4_year_prices_map
 
 
-def get_prev_4_year_pe_ratio(dates, eps, prices):
+def get_historic_pe_ratio(dates, eps, prices):
     prev_4_year_pe_ratio = {}
 
     for i in range(4):
-        pe_ratio = round(prices[i]/eps[i], 2)
+        pe_ratio = round(prices[i] / eps[i], 2)
         prev_4_year_pe_ratio[dates[i]] = pe_ratio
 
     return prev_4_year_pe_ratio
 
 
-ticker = "AAPL"
-historic_eps = get_prev_4_year_eps(ticker)
-prev_years = list(historic_eps.keys())
+def get_future_cash_flows(ticker, years, growth_rate):
+    cash_flow = 69495
+    future_cash_flows = []
 
-historic_prices = get_prev_4_year_prices(ticker, prev_years)
+    for i in range(years):
+        cash_flow = cash_flow * (1 + growth_rate)
+        future_cash_flows.append(round(cash_flow, 2))
 
-prev_eps = list(historic_eps.values())
-prev_prices = list(historic_prices.values())
+    return future_cash_flows
 
-historic_pe = get_prev_4_year_pe_ratio(prev_years, prev_eps, prev_prices)
 
-for k, v in historic_pe.items():
-    print(f"{k}: {v}")
+def get_discount_rates(fcf, discount_rate=0.15):
+    yearly_discounted_amounts = []
 
+    j = 1
+    for i in range(len(fcf)):
+        discounted_amount = fcf[i] / (1 + discount_rate) ** j
+        yearly_discounted_amounts.append(round(discounted_amount, 2))
+        j += 1
+
+    return yearly_discounted_amounts
+
+
+
+
+company = "AAPL"
+
+
+future_cash_flows = get_future_cash_flows(company, 10, 0.12)
+future_discount_rates = get_discount_rates(future_cash_flows)
+
+print(future_cash_flows)
+print(future_discount_rates)
