@@ -79,13 +79,44 @@ def get_discount_rates(fcf, discount_rate=0.15):
     return yearly_discounted_amounts
 
 
+def get_4_year_pe_average(historic_pe):
+    pe_sum = 0
+
+    for v in historic_pe:
+        pe_sum += v
+
+    return round(pe_sum / len(historic_pe), 2)
 
 
-company = "AAPL"
+def get_terminal_value(ticker, historic_pe_average, year_10_fcf):
+    multiplier = get_terminal_value_multiplier(ticker, historic_pe_average)
+
+    return round(multiplier * year_10_fcf, 2)
 
 
-future_cash_flows = get_future_cash_flows(company, 10, 0.12)
-future_discount_rates = get_discount_rates(future_cash_flows)
+def get_terminal_value_multiplier(ticker, historic_pe_avg):
+    est_growth_rate = get_est_5yr_growth_rate(ticker)[:-2]
 
-print(future_cash_flows)
-print(future_discount_rates)
+    return min(float(est_growth_rate * 2), historic_pe_avg)
+
+
+def main(company):
+    future_cash_flows = get_future_cash_flows(company, 10, 0.12)
+    future_discount_rates = get_discount_rates(future_cash_flows)
+
+    historic_eps_map = get_historic_eps(company)
+    historic_prices_map = get_historic_prices(company, list(historic_eps_map.keys()))
+
+    eps = list(historic_eps_map.values())
+    dates = list(historic_eps_map.keys())
+    prices = list(historic_prices_map.values())
+
+    historic_pe = get_historic_pe_ratio(dates, eps, prices)
+    pe_values = list(historic_pe.values())
+    pe_4_year_average = get_4_year_pe_average(pe_values)
+
+    terminal_value = get_terminal_value(company, pe_4_year_average, future_cash_flows[len(future_cash_flows) - 1])
+    print(terminal_value)
+
+
+main("AAPL")
