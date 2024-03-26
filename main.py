@@ -1,7 +1,8 @@
 import pandas as pd
 import yfinance as yf
 import yahoo_fin.stock_info as si
-
+import json
+import math
 pd.set_option("display.max_columns", 500)
 pd.set_option("display.max_rows", 5000)
 
@@ -37,7 +38,9 @@ def get_historic_eps(ticker):
 
     prev_4_year_eps_map = {}
     for i in range(4):
-        prev_4_year_eps_map[str(prev_4_year_dates[i] - pd.Timedelta(days=2))[:10]] = prev_4_year_eps_values.iloc[i]
+        if not math.isnan(prev_4_year_eps_values.iloc[i]):
+            if prev_4_year_eps_values.iloc[i] != 0.0:
+                prev_4_year_eps_map[str(prev_4_year_dates[i] - pd.Timedelta(days=1))[:10]] = prev_4_year_eps_values.iloc[i]
 
     return prev_4_year_eps_map
 
@@ -48,6 +51,10 @@ def get_historic_prices(ticker, prev_years):
 
     prev_4_year_prices_map = {}
     for year in prev_years:
+        #  If date not available in price list check the day before until it finds a date available
+        while year not in history.index:
+            year = str(pd.to_datetime(year) - pd.Timedelta(days=1))
+
         if year in history.index:
             prev_4_year_prices_map[year] = round(history.loc[year].iloc[3], 2)
 
@@ -105,7 +112,7 @@ def get_terminal_value(ticker, historic_pe_average, year_10_fcf):
 
 def get_terminal_value_multiplier(ticker, historic_pe_avg):
     est_growth_rate = float(get_est_5yr_growth_rate(ticker)[:-2])
-    print(f"EST GROWTH RATE: {est_growth_rate*2}")
+    print(f"ANALYSIS EST GROWTH RATE: {est_growth_rate}")
     return abs(min(est_growth_rate * 2, historic_pe_avg))
 
 
@@ -149,6 +156,7 @@ def discounted_cash_flow_analysis(company, years, estimated_growth, mos_rate):
     historic_pe_values = list(historic_pe.values())
     print(f"PE RATIOS: {historic_pe_values}")
     pe_4_year_average = get_4_year_pe_average(historic_pe_values)
+    print(f"4 YR PE AVERAGE: {pe_4_year_average}")
 
     terminal_value = get_terminal_value(company, pe_4_year_average, future_cash_flows[len(future_cash_flows) - 1])
     print(f"TERMINAL VALUE: {terminal_value}")
@@ -165,8 +173,13 @@ def discounted_cash_flow_analysis(company, years, estimated_growth, mos_rate):
     print(f"INTRINSIC VALUE PLUS CASH: {convert_to_billions(intrinsic_value)}B")
 
     buy_value = add_margin_of_safety(intrinsic_value, mos_rate)
-    print(f"BUY RANGE INCLUDING MARGIN OF SAFETY: {buy_value}")
+    print(f"BUY RANGE INCLUDING MARGIN OF SAFETY OF {mos_rate*100}%: {convert_to_billions(buy_value)}B")
 
 
-discounted_cash_flow_analysis("AAPL", 10, 0.12, 0.25)
+ticker = "NKE"
+discounted_cash_flow_analysis(ticker, 10, 0.05, 0.30)
+print("\n")
+discounted_cash_flow_analysis(ticker, 10, 0.10, 0.30)
 
+# comp = yf.Ticker(ticker)
+# print(json.dumps(comp.news, indent=4))
