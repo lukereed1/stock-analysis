@@ -131,6 +131,26 @@ def get_trailing_eps(company_info):
     return company_info["trailingEps"]
 
 
+def get_future_eps_values(eps, growth_rate, years):
+    future_eps_values = [eps]
+
+    for i in range(years - 1):
+        eps = round(eps * (1 + growth_rate), 2)
+        future_eps_values.append(eps)
+    return future_eps_values
+
+
+def get_future_prices(future_eps_values, pe_multiplier):
+    n = len(future_eps_values) - 1
+    year_value = round(future_eps_values[n] * pe_multiplier, 2)
+    future_prices = [year_value]
+
+    for i in range(n - 1, -1, -1):
+        year_value = round(year_value / 1.15, 2)
+        future_prices.append(year_value)
+    return future_prices
+
+
 def discounted_cash_flow_analysis(company, years, estimated_growth, mos_rate):
     future_cash_flows = get_future_cash_flows(company, years, estimated_growth)
     future_values_discounted = get_discounted_rates(future_cash_flows)
@@ -174,28 +194,11 @@ def discounted_cash_flow_analysis(company, years, estimated_growth, mos_rate):
 
     buy_value = add_margin_of_safety(intrinsic_value, mos_rate)
     print(f"BUY RANGE INCLUDING MARGIN OF SAFETY OF {mos_rate*100}%: {convert_to_billions(buy_value)}B")
+    market_cap = convert_to_billions(yf.Ticker(company).info["marketCap"])
+    print(f"ACTUAL MARKET CAP: {market_cap}B")
 
 
-def get_future_eps_values(eps, growth_rate, years):
-    future_eps_values = [eps]
-    for i in range(years - 1):
-        eps = round(eps * (1 + growth_rate), 2)
-        future_eps_values.append(eps)
-    return future_eps_values
-
-
-def get_future_prices(future_eps_values, pe_multiplier):
-    n = len(future_eps_values) - 1
-    year_value = round(future_eps_values[n] * pe_multiplier, 2)
-    future_prices = [year_value]
-    for i in range(n - 1, -1, -1):
-        year_value = round(year_value / 1.15, 2)
-        future_prices.append(year_value)
-
-    return future_prices
-
-
-def stock_valuation(company, years):
+def stock_valuation(company, years, mos_rate, annual_growth_rate):
     company_info = yf.Ticker(company).info
     ttm_eps = get_trailing_eps(company_info)
     ttm_pe = get_trailing_pe(company_info)
@@ -220,18 +223,26 @@ def stock_valuation(company, years):
     print(f"ESTIMATED GROWTH RATE: {estimated_growth_rate}")
     pe_multiplier = get_multiplier_minimum(estimated_growth_rate, pe_avg_including_ttm)
     print(f"PE MULTIPLIER: {pe_multiplier}")
-    future_eps_values = get_future_eps_values(ttm_eps, estimated_growth_rate, years)
+    future_eps_values = get_future_eps_values(ttm_eps, annual_growth_rate, years)
     print(f"ESTIMATED FUTURE EPS VALUES: {future_eps_values}")
     future_prices = get_future_prices(future_eps_values, pe_multiplier)
+    print(f"ESTIMATED FUTURE PRICES: {future_prices}")
     current_price_estimation = future_prices[years - 1]
     print(f"CURRENT PRICE ESTIMATION: {current_price_estimation}")
 
+    price_including_mos = round(current_price_estimation * (1 - mos_rate), 2)
+    print(f"PRICE WITH MARGIN OF SAFETY APPLIED: {price_including_mos}")
+    current_price = company_info["regularMarketPreviousClose"]
+    print(f"ACTUAL PRICE: {current_price}")
 
-ticker = "MSFT"
-stock_valuation(ticker, 10)
+
+ticker = "SONY"
+stock_valuation(ticker, 10, 0.3, .12)
+print("\n")
+discounted_cash_flow_analysis(ticker, 10, 0.15, 0.50)
 # discounted_cash_flow_analysis(ticker, 10, 0.05, 0.30)
 # print("\n")
-# discounted_cash_flow_analysis(ticker, 10, 0.10, 0.30)
+
 
 # company_info = yf.Ticker(ticker).info
 # print(json.dumps(company_info, indent=4))
