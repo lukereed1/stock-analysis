@@ -26,6 +26,7 @@ def get_company_name_and_price(income_statement):
         company_details = income_statement.find_all("div", class_=["text-4xl", "font-bold", "block", "sm:inline"])
         name, price = company_details[0].text, company_details[1].text
         return name, price
-    except AttributeError:
+    except IndexError:
         print("There was a problem finding the current price")
+        return "N/A", "N/A"
 

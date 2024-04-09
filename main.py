@@ -5,6 +5,7 @@ from metrics import (get_ratios_and_metrics, get_analyst_5_year_growth_predictio
 from util import get_years_available, get_company_name_and_price
 from calcs import discounted_cash_flow_analysis, get_sticker_price
 
+
 def main(ticker):
     income_statement = get_income_statement(ticker)
     balance_sheet = get_balance_sheet(ticker)
@@ -38,17 +39,17 @@ def main(ticker):
     get_price_fcf_ratio(ratios, balance_years_available)
 
 
-main("WING")
+main("LULU")
 print("\n")
 
-growth_rate = 17
-margin_of_safety = 50
+growth_rate = 12.3
+margin_of_safety = 30
 
-free_cash_flow = 81.09
-fcf_multiple = 76
+free_cash_flow = 1644
+fcf_multiple = 40
 
-eps = 2.35
-future_pe_estimate = 86
+eps = 12.2
+future_pe_estimate = 25
 
 discounted_cash_flow_analysis(growth_rate, free_cash_flow, margin_of_safety, fcf_multiple)
 print("\n")

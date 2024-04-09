@@ -1,4 +1,4 @@
-from util import display_metrics, get_years_available, get_soup
+from util import get_soup
 import yahoo_fin.stock_info as si
 
 
