@@ -12,14 +12,13 @@ class GUI:
         entry = getattr(self, entry_name)
         entry.delete(0, tk.END)
         entry.insert(0, data)
-        print(entry)
 
     def create_widgets(self):
         self.search_bar()
         self.business_summary()
         self.historic_data()
         self.calculations_section()
-        self.set_data("growth_rate", "BIG REEDOS")
+        self.set_data("calc_growth_rate", "BIG REEDOS")
         self.set_data("years", "BIG REEDOS")
 
     def search_bar(self):
@@ -153,6 +152,8 @@ class GUI:
         calc_frame = tk.Frame(self.root)
         calc_frame.pack(pady=20)
         self.growth_calc(calc_frame)
+        self.dcfa_calc(calc_frame)
+        self.sticker_price_calc(calc_frame)
 
     def growth_calc(self, calc_frame):
         growth_calc_frame = tk.Frame(calc_frame)
@@ -162,7 +163,7 @@ class GUI:
         growth_rate_calc_label.config(font=("TkDefaultFont", 16, "bold"))
 
         growth_calc_labels = ["Start Amount", "End Amount", "Years", "Growth Rate"]
-        growth_calc_entries = ["start_amount", "end_amount", "years", "growth_rate"]
+        growth_calc_entries = ["start_amount", "end_amount", "years", "calc_growth_rate"]
         for i in range(4):
             label = tk.Label(growth_calc_frame, text=growth_calc_labels[i])
             entry = tk.Entry(growth_calc_frame, width=7)
@@ -178,10 +179,40 @@ class GUI:
         growth_calc_button.grid(row=4, columnspan=2, sticky="EW", pady=10)
 
     def dcfa_calc(self, calc_frame):
-        print("test")
+        dcfa_calc_frame = tk.Frame(calc_frame)
+        dcfa_calc_frame.grid(row=0, column=1, padx=50)
+        dcfa_calc_label = tk.Label(dcfa_calc_frame, text="Discounted Cash Flow Analysis")
+        dcfa_calc_label.grid(row=0, columnspan=2, sticky="EW", pady=(0, 10))
+        dcfa_calc_label.config(font=("tkDefaultFont", 16, "bold"))
+
+        dcfa_labels = ["TTM FCF", "Growth Rate", "P/FCF Average",
+                       "Margin of Safety (%)", "Intrinsic Value no MOS", "Intrinsic Value with MOS"]
+        dcfa_entries = ["dcfa_ttm_fcf", "dcfa_growth_rate", "dcfa_p_fcf",
+                        "dcfa_mos", "intrin_no_mos", "intrin_with_mos"]
+
+        for i in range(4):
+            label = tk.Label(dcfa_calc_frame, text=dcfa_labels[i])
+            label.grid(row=i + 1, column=0)
+
+            entry = tk.Entry(dcfa_calc_frame, width=7)
+            setattr(self, dcfa_entries[i], entry)
+            entry.grid(row=i + 1, column=1)
+
+        dcfa_calc_button = tk.Button(dcfa_calc_frame, text="Calculate")
+        dcfa_calc_button.grid(columnspan=2, sticky="EW", pady=10)
+
+        for i in range(4, 6):
+            label = tk.Label(dcfa_calc_frame, text=dcfa_labels[i])
+            label.grid(row=i + 2, column=0)
+
+            entry = tk.Entry(dcfa_calc_frame, width=12)
+            entry.grid(row=i + 2, column=1)
 
     def sticker_price_calc(self, calc_frame):
+
         print("test")
+
+
 def main():
     root = tk.Tk()
     app = GUI(root)
