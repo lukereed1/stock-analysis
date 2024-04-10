@@ -1,12 +1,11 @@
 import tkinter as tk
-from calcs import discounted_cash_flow_analysis, get_sticker_price
+from calcs import discounted_cash_flow_analysis, get_sticker_price, calculate_growth_rate
 from scraper import (get_income_statement, get_ttm_income_statement, get_balance_sheet,
                      get_ratios_and_metrics, get_analyst_5_year_growth_prediction)
-
-from data_processing import(get_market_cap, get_years_available, get_company_name_and_price, get_ttm_fcf, get_ttm_eps,
-                            get_sales_growth_rates, get_eps_growth_rates, get_free_cash_flow_growth_rates,
-                            get_equity_growth_rates, get_historic_growth_data_from_rows, get_roic,
-                            get_historic_ratio_data_from_rows, get_pe_ratio, get_price_fcf_ratio, get_debt_fcf_ratio)
+from data_processing import (get_market_cap, get_years_available, get_company_name_and_price, get_ttm_fcf, get_ttm_eps,
+                             get_sales_growth_rates, get_eps_growth_rates, get_free_cash_flow_growth_rates,
+                             get_equity_growth_rates, get_historic_growth_data_from_rows, get_roic,
+                             get_historic_ratio_data_from_rows, get_pe_ratio, get_price_fcf_ratio, get_debt_fcf_ratio)
 
 
 class GUI:
@@ -90,6 +89,22 @@ class GUI:
         self.set_data("five_year_d_fcf", five_d_fcf)
         self.set_data("ten_year_d_fcf", ten_d_fcf)
 
+    def calculate_growth_rate(self):
+        start_amount = getattr(self, "start_amount").get()
+        end_amount = getattr(self, "end_amount").get()
+        years = getattr(self, "years").get()
+        try:
+            start_amount = float(start_amount)
+            end_amount = float(end_amount)
+            years = float(years)
+        except ValueError:
+            print("All values must be a positive number")
+            return
+
+
+        growth_rate = calculate_growth_rate(years, start_amount, end_amount)
+        self.set_data("calc_growth_rate", growth_rate)
+
 
 
     def set_data(self, entry_name, data):
@@ -102,8 +117,6 @@ class GUI:
         self.business_summary()
         self.historic_data()
         self.calculations_section()
-        # self.set_data("calc_growth_rate", "test")
-        # self.set_data("sticker_no_mos", "test123")
 
     def search_bar(self):
         search_frame = tk.Frame(self.root)
@@ -242,12 +255,12 @@ class GUI:
 
     def growth_calc(self, calc_frame):
         growth_calc_frame = tk.Frame(calc_frame)
-        growth_calc_frame.grid(row=0, column=0, padx=(0, 50))
+        growth_calc_frame.grid(row=0, column=0, padx=(0, 25))
         growth_rate_calc_label = tk.Label(growth_calc_frame, text="Growth Rate Calculator")
         growth_rate_calc_label.grid(row=0, columnspan=2, sticky="EW", pady=(0, 10))
         growth_rate_calc_label.config(font=("TkDefaultFont", 16, "bold"))
 
-        growth_calc_labels = ["Start Amount", "End Amount", "Years", "Growth Rate"]
+        growth_calc_labels = ["Start Amount", "End Amount", "Years", "Annual Growth Rate (%)"]
         growth_calc_entries = ["start_amount", "end_amount", "years", "calc_growth_rate"]
         for i in range(4):
             label = tk.Label(growth_calc_frame, text=growth_calc_labels[i])
@@ -260,7 +273,7 @@ class GUI:
                 label.grid(row=i + 1, column=0)
                 entry.grid(row=i + 1, column=1)
 
-        growth_calc_button = tk.Button(growth_calc_frame, text="Calculate")
+        growth_calc_button = tk.Button(growth_calc_frame, text="Calculate", command=self.calculate_growth_rate)
         growth_calc_button.grid(row=4, columnspan=2, sticky="EW", pady=10)
 
     def dcfa_calc(self, calc_frame):
@@ -296,7 +309,7 @@ class GUI:
 
     def sticker_price_calc(self, calc_frame):
         sticker_calc_frame = tk.Frame(calc_frame)
-        sticker_calc_frame.grid(row=0, column=2)
+        sticker_calc_frame.grid(row=0, column=2, padx=(25, 0))
         sticker_price_calc_label = tk.Label(sticker_calc_frame, text="Sticker Price Calculation")
         sticker_price_calc_label.grid(row=0, columnspan=2, sticky="EW", pady=(0, 10), padx=(20, 0))
         sticker_price_calc_label.config(font=("tkDefaultFont", 16, "bold"))

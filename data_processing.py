@@ -1,3 +1,6 @@
+from calcs import calculate_growth_rate
+
+
 def get_sales_growth_rates(income_statement, years):
     try:
         gross_profits = income_statement.find("span", string="Gross Profit").parent.parent
@@ -198,13 +201,6 @@ def get_company_name_and_price(income_statement):
         return "N/A", "N/A"
 
 
-def calculate_growth_rate(time_frame_in_years, start_amount, end_amount):
-    if start_amount == 0:
-        return "N/A"
-    growth_rate = (end_amount / start_amount) ** (1 / time_frame_in_years) - 1
-    if isinstance(growth_rate, complex):
-        return "N/A"
-    growth_rate = round(growth_rate * 100, 2)
-    return growth_rate
+
 
 

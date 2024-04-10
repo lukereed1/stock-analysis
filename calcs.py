@@ -30,3 +30,13 @@ def get_sticker_price(growth_rate, ttm_eps, margin_of_safety, future_pe):
     current_price_with_mos = round(current_price - (margin_of_safety / 100) * current_price, 2)
     print(f"Current sticker price without MOS Applied: {current_price}")
     print(f"Current sticker price with MOS Applied: {current_price_with_mos}")
+
+
+def calculate_growth_rate(time_frame_in_years, start_amount, end_amount):
+    if start_amount < 0:
+        start_amount = 1
+    growth_rate = (end_amount / start_amount) ** (1 / time_frame_in_years) - 1
+    if isinstance(growth_rate, complex):
+        return "N/A"
+    growth_rate = round(growth_rate * 100, 2)
+    return growth_rate
