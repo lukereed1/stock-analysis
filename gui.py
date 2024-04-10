@@ -18,8 +18,8 @@ class GUI:
         self.business_summary()
         self.historic_data()
         self.calculations_section()
-        self.set_data("calc_growth_rate", "BIG REEDOS")
-        self.set_data("years", "BIG REEDOS")
+        # self.set_data("calc_growth_rate", "test")
+        # self.set_data("sticker_no_mos", "test123")
 
     def search_bar(self):
         search_frame = tk.Frame(self.root)
@@ -206,11 +206,39 @@ class GUI:
             label.grid(row=i + 2, column=0)
 
             entry = tk.Entry(dcfa_calc_frame, width=12)
+            setattr(self, dcfa_entries[i], entry)
             entry.grid(row=i + 2, column=1)
 
     def sticker_price_calc(self, calc_frame):
+        sticker_calc_frame = tk.Frame(calc_frame)
+        sticker_calc_frame.grid(row=0, column=2)
+        sticker_price_calc_label = tk.Label(sticker_calc_frame, text="Sticker Price Calculation")
+        sticker_price_calc_label.grid(row=0, columnspan=2, sticky="EW", pady=(0, 10), padx=(20, 0))
+        sticker_price_calc_label.config(font=("tkDefaultFont", 16, "bold"))
 
-        print("test")
+        sticker_price_labels = ["TTM EPS", "Growth Rate", "Future PE", "Margin of Safety (%)",
+                                "Sticker Price no MOS", "Sticker Price with MOS"]
+        sticker_price_entries = ["sticker_eps", "sticker_growth_rate", "sticker_future_pe",
+                                 "sticker_calc_mos", "sticker_no_mos", "sticker_with_mos"]
+
+        for i in range(4):
+            label = tk.Label(sticker_calc_frame, text=sticker_price_labels[i])
+            label.grid(row=i + 1, column=0)
+
+            entry = tk.Entry(sticker_calc_frame, width=7)
+            setattr(self, sticker_price_entries[i], entry)
+            entry.grid(row=i + 1, column=1)
+
+        sticker_calc_button = tk.Button(sticker_calc_frame, text="Calculate")
+        sticker_calc_button.grid(columnspan=2, sticky="EW", pady=10)
+
+        for i in range(4, 6):
+            label = tk.Label(sticker_calc_frame, text=sticker_price_labels[i])
+            label.grid(row=i + 2, column=0)
+
+            entry = tk.Entry(sticker_calc_frame, width=12)
+            setattr(self, sticker_price_entries[i], entry)
+            entry.grid(row=i + 2, column=1)
 
 
 def main():

@@ -39,17 +39,17 @@ def main(ticker):
     get_price_fcf_ratio(ratios, balance_years_available)
 
 
-main("LULU")
+main("VYGR")
 print("\n")
 
-growth_rate = 12.3
-margin_of_safety = 30
+growth_rate = 11
+margin_of_safety = 50
 
-free_cash_flow = 1644
-fcf_multiple = 40
+free_cash_flow = 199
+fcf_multiple = 10
 
-eps = 12.2
-future_pe_estimate = 25
+eps = 1.16
+future_pe_estimate = 14
 
 discounted_cash_flow_analysis(growth_rate, free_cash_flow, margin_of_safety, fcf_multiple)
 print("\n")
