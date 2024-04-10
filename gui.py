@@ -1,4 +1,12 @@
 import tkinter as tk
+from calcs import discounted_cash_flow_analysis, get_sticker_price
+from scraper import (get_income_statement, get_ttm_income_statement, get_balance_sheet,
+                     get_ratios_and_metrics, get_analyst_5_year_growth_prediction)
+
+from data_processing import(get_market_cap, get_years_available, get_company_name_and_price, get_ttm_fcf, get_ttm_eps,
+                            get_sales_growth_rates, get_eps_growth_rates, get_free_cash_flow_growth_rates,
+                            get_equity_growth_rates, get_historic_growth_data_from_rows, get_roic,
+                            get_historic_ratio_data_from_rows, get_pe_ratio, get_price_fcf_ratio, get_debt_fcf_ratio)
 
 
 class GUI:
@@ -7,6 +15,82 @@ class GUI:
         root.title("Stock Analysis")
         root.geometry("1000x650")
         self.create_widgets()
+
+    def handle_search(self):
+        search_value = getattr(self, "search_bar").get().upper()
+        try:
+            self.get_stock_info(search_value)
+        except ValueError:
+            print("There was a problem finding this stock")
+
+    def get_stock_info(self, ticker):
+        income_statement = get_income_statement(ticker)
+        balance_sheet = get_balance_sheet(ticker)
+        ratios_and_metrics = get_ratios_and_metrics(ticker)
+        ttm_income_statement = get_ttm_income_statement(ticker)
+        income_years_available = get_years_available(income_statement)
+        balance_years_available = get_years_available(balance_sheet)
+        analyst_estimated_growth = get_analyst_5_year_growth_prediction(ticker)
+
+        self.set_summary(income_statement, ttm_income_statement, ratios_and_metrics, analyst_estimated_growth)
+        self.set_growth(income_statement, balance_sheet, income_years_available, balance_years_available)
+        self.set_ratios(ratios_and_metrics, balance_years_available)
+
+    def set_summary(self, income_statement, ttm_income_statement, ratios_and_metrics, analyst_growth_est):
+        name, price = get_company_name_and_price(income_statement)
+        market_cap = get_market_cap(ratios_and_metrics)
+        ttm_fcf = get_ttm_fcf(ttm_income_statement)
+        ttm_eps = get_ttm_eps(ttm_income_statement)
+        self.set_data("name_data", name)
+        self.set_data("est_growth_data", analyst_growth_est)
+        self.set_data("cap_data", market_cap)
+        self.set_data("price_data", price)
+        self.set_data("fcf_data", ttm_fcf)
+        self.set_data("eps_data", ttm_eps)
+
+    def set_growth(self, income_statement, balance_sheet, income_years_available, balance_years_available):
+        one_equity, five_equity, ten_equity = get_equity_growth_rates(balance_sheet, balance_years_available)
+        self.set_data("one_year_equity", one_equity)
+        self.set_data("five_year_equity", five_equity)
+        self.set_data("ten_year_equity", ten_equity)
+
+        one_eps, five_eps, ten_eps = get_eps_growth_rates(income_statement, income_years_available)
+        self.set_data("one_year_eps", one_eps)
+        self.set_data("five_year_eps", five_eps)
+        self.set_data("ten_year_eps", ten_eps)
+
+        one_sales, five_sales, ten_sales = get_sales_growth_rates(income_statement, income_years_available)
+        self.set_data("one_year_sales", one_sales)
+        self.set_data("five_year_sales", five_sales)
+        self.set_data("ten_year_sales", ten_sales)
+
+        one_cash, five_cash, ten_cash = get_free_cash_flow_growth_rates(income_statement, income_years_available)
+        self.set_data("one_year_cash", one_cash)
+        self.set_data("five_year_cash", five_cash)
+        self.set_data("ten_year_cash", ten_cash)
+
+    def set_ratios(self, ratios_and_metrics, years_available):
+        ttm_roic, five_roic, ten_roic = get_roic(ratios_and_metrics, years_available)
+        self.set_data("ttm_roic", ttm_roic)
+        self.set_data("five_year_roic", five_roic)
+        self.set_data("ten_year_roic", ten_roic)
+
+        ttm_pe, five_pe, ten_pe = get_pe_ratio(ratios_and_metrics, years_available)
+        self.set_data("ttm_pe", ttm_pe)
+        self.set_data("five_year_pe", five_pe)
+        self.set_data("ten_year_pe", ten_pe)
+
+        ttm_p_fcf, five_p_fcf, ten_p_fcf = get_price_fcf_ratio(ratios_and_metrics, years_available)
+        self.set_data("ttm_p_fcf", ttm_p_fcf)
+        self.set_data("five_year_p_fcf", five_p_fcf)
+        self.set_data("ten_year_p_fcf", ten_p_fcf)
+
+        ttm_d_fcf, five_d_fcf, ten_d_fcf = get_debt_fcf_ratio(ratios_and_metrics, years_available)
+        self.set_data("ttm_d_fcf", ttm_d_fcf)
+        self.set_data("five_year_d_fcf", five_d_fcf)
+        self.set_data("ten_year_d_fcf", ten_d_fcf)
+
+
 
     def set_data(self, entry_name, data):
         entry = getattr(self, entry_name)
@@ -29,9 +113,10 @@ class GUI:
         search_label.grid(row=0, column=0, padx=5)
 
         search_entry = tk.Entry(search_frame)
+        setattr(self, "search_bar", search_entry)
         search_entry.grid(row=0, column=1, padx=5)
 
-        search_button = tk.Button(search_frame, text="Search")
+        search_button = tk.Button(search_frame, text="Search", command=self.handle_search)
         search_button.grid(row=0, column=2, padx=5)
 
     def business_summary(self):
