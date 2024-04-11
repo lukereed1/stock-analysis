@@ -119,8 +119,8 @@ class GUI:
             return
 
         intrinsic_value, intrinsic_value_with_mos = dcfa_calc(growth_rate, ttm_fcf, margin_of_safety, p_fcf_value)
-        self.set_data("intrin_no_mos", convert_million_to_billion(intrinsic_value))
-        self.set_data("intrin_with_mos", convert_million_to_billion(intrinsic_value_with_mos))
+        self.set_data("intrin_no_mos", add_commas_to_num(intrinsic_value))
+        self.set_data("intrin_with_mos", add_commas_to_num(intrinsic_value_with_mos))
 
     def set_data(self, entry_name, data):
         entry = getattr(self, entry_name)
