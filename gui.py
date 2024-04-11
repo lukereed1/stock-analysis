@@ -1,11 +1,10 @@
 import tkinter as tk
-from calcs import discounted_cash_flow_analysis, get_sticker_price, calculate_growth_rate
+from calcs import dcfa_calc, get_sticker_price, calculate_growth_rate, add_commas_to_num
 from scraper import (get_income_statement, get_ttm_income_statement, get_balance_sheet,
                      get_ratios_and_metrics, get_analyst_5_year_growth_prediction)
 from data_processing import (get_market_cap, get_years_available, get_company_name_and_price, get_ttm_fcf, get_ttm_eps,
                              get_sales_growth_rates, get_eps_growth_rates, get_free_cash_flow_growth_rates,
-                             get_equity_growth_rates, get_historic_growth_data_from_rows, get_roic,
-                             get_historic_ratio_data_from_rows, get_pe_ratio, get_price_fcf_ratio, get_debt_fcf_ratio)
+                             get_equity_growth_rates, get_roic, get_pe_ratio, get_price_fcf_ratio, get_debt_fcf_ratio)
 
 
 class GUI:
@@ -101,11 +100,27 @@ class GUI:
             print("All values must be a positive number")
             return
 
-
         growth_rate = calculate_growth_rate(years, start_amount, end_amount)
         self.set_data("calc_growth_rate", growth_rate)
 
+    def calculate_dcfa(self):
+        ttm_fcf = getattr(self, "dcfa_ttm_fcf").get()
+        growth_rate = getattr(self, "dcfa_growth_rate").get()
+        p_fcf_value = getattr(self, "dcfa_p_fcf").get()
+        margin_of_safety = getattr(self, "dcfa_mos").get()
 
+        try:
+            ttm_fcf = float(ttm_fcf)
+            growth_rate = float(growth_rate)
+            p_fcf_value = float(p_fcf_value)
+            margin_of_safety = float(margin_of_safety)
+        except ValueError:
+            print("Ensure all inputs are valid")
+            return
+
+        intrinsic_value, intrinsic_value_with_mos = dcfa_calc(growth_rate, ttm_fcf, margin_of_safety, p_fcf_value)
+        self.set_data("intrin_no_mos", convert_million_to_billion(intrinsic_value))
+        self.set_data("intrin_with_mos", convert_million_to_billion(intrinsic_value_with_mos))
 
     def set_data(self, entry_name, data):
         entry = getattr(self, entry_name)
@@ -113,12 +128,12 @@ class GUI:
         entry.insert(0, data)
 
     def create_widgets(self):
-        self.search_bar()
-        self.business_summary()
+        self.search_bar_section()
+        self.business_summary_section()
         self.historic_data()
         self.calculations_section()
 
-    def search_bar(self):
+    def search_bar_section(self):
         search_frame = tk.Frame(self.root)
         search_frame.pack(pady=20)
 
@@ -132,7 +147,7 @@ class GUI:
         search_button = tk.Button(search_frame, text="Search", command=self.handle_search)
         search_button.grid(row=0, column=2, padx=5)
 
-    def business_summary(self):
+    def business_summary_section(self):
         summary_frame = tk.Frame(self.root)
         summary_frame.pack(pady=10)
         labels = ["Business Name", "Analyst Est. Growth", "Market Cap", "Current Price", "TTM FCF", "TTM EPS"]
@@ -249,11 +264,11 @@ class GUI:
     def calculations_section(self):
         calc_frame = tk.Frame(self.root)
         calc_frame.pack(pady=20)
-        self.growth_calc(calc_frame)
-        self.dcfa_calc(calc_frame)
-        self.sticker_price_calc(calc_frame)
+        self.growth_calc_section(calc_frame)
+        self.dcfa_calc_section(calc_frame)
+        self.sticker_price_calc_section(calc_frame)
 
-    def growth_calc(self, calc_frame):
+    def growth_calc_section(self, calc_frame):
         growth_calc_frame = tk.Frame(calc_frame)
         growth_calc_frame.grid(row=0, column=0, padx=(0, 25))
         growth_rate_calc_label = tk.Label(growth_calc_frame, text="Growth Rate Calculator")
@@ -276,14 +291,14 @@ class GUI:
         growth_calc_button = tk.Button(growth_calc_frame, text="Calculate", command=self.calculate_growth_rate)
         growth_calc_button.grid(row=4, columnspan=2, sticky="EW", pady=10)
 
-    def dcfa_calc(self, calc_frame):
+    def dcfa_calc_section(self, calc_frame):
         dcfa_calc_frame = tk.Frame(calc_frame)
         dcfa_calc_frame.grid(row=0, column=1, padx=50)
         dcfa_calc_label = tk.Label(dcfa_calc_frame, text="Discounted Cash Flow Analysis")
         dcfa_calc_label.grid(row=0, columnspan=2, sticky="EW", pady=(0, 10))
         dcfa_calc_label.config(font=("tkDefaultFont", 16, "bold"))
 
-        dcfa_labels = ["TTM FCF", "Growth Rate", "P/FCF Average",
+        dcfa_labels = ["TTM FCF", "Growth Rate (%)", "P/FCF Average",
                        "Margin of Safety (%)", "Intrinsic Value no MOS", "Intrinsic Value with MOS"]
         dcfa_entries = ["dcfa_ttm_fcf", "dcfa_growth_rate", "dcfa_p_fcf",
                         "dcfa_mos", "intrin_no_mos", "intrin_with_mos"]
@@ -296,7 +311,7 @@ class GUI:
             setattr(self, dcfa_entries[i], entry)
             entry.grid(row=i + 1, column=1)
 
-        dcfa_calc_button = tk.Button(dcfa_calc_frame, text="Calculate")
+        dcfa_calc_button = tk.Button(dcfa_calc_frame, text="Calculate", command=self.calculate_dcfa)
         dcfa_calc_button.grid(columnspan=2, sticky="EW", pady=10)
 
         for i in range(4, 6):
@@ -307,14 +322,14 @@ class GUI:
             setattr(self, dcfa_entries[i], entry)
             entry.grid(row=i + 2, column=1)
 
-    def sticker_price_calc(self, calc_frame):
+    def sticker_price_calc_section(self, calc_frame):
         sticker_calc_frame = tk.Frame(calc_frame)
         sticker_calc_frame.grid(row=0, column=2, padx=(25, 0))
         sticker_price_calc_label = tk.Label(sticker_calc_frame, text="Sticker Price Calculation")
         sticker_price_calc_label.grid(row=0, columnspan=2, sticky="EW", pady=(0, 10), padx=(20, 0))
         sticker_price_calc_label.config(font=("tkDefaultFont", 16, "bold"))
 
-        sticker_price_labels = ["TTM EPS", "Growth Rate", "Future PE", "Margin of Safety (%)",
+        sticker_price_labels = ["TTM EPS", "Growth Rate (%)", "Future PE", "Margin of Safety (%)",
                                 "Sticker Price no MOS", "Sticker Price with MOS"]
         sticker_price_entries = ["sticker_eps", "sticker_growth_rate", "sticker_future_pe",
                                  "sticker_calc_mos", "sticker_no_mos", "sticker_with_mos"]

@@ -199,8 +199,3 @@ def get_company_name_and_price(income_statement):
     except IndexError:
         print("There was a problem finding the current price")
         return "N/A", "N/A"
-
-
-
-
-

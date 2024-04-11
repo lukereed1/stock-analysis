@@ -1,5 +1,11 @@
-from util import get_soup
+from bs4 import BeautifulSoup
+import requests
 import yahoo_fin.stock_info as si
+
+
+def get_soup(url):
+    response = requests.get(url)
+    return BeautifulSoup(response.content, "html.parser")
 
 
 def get_income_statement(ticker):
@@ -32,4 +38,3 @@ def get_analyst_5_year_growth_prediction(ticker):
         return rate
     except AttributeError:
         return "Problem finding analyst growth rate estimate"
-    
