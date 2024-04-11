@@ -18,7 +18,7 @@ class GUI:
         search_value = getattr(self, "search_bar").get().upper()
         try:
             self.get_stock_info(search_value)
-        except ValueError:
+        except (ValueError, KeyError):
             print("There was a problem finding this stock")
 
     def get_stock_info(self, ticker):
@@ -121,6 +121,25 @@ class GUI:
         intrinsic_value, intrinsic_value_with_mos = dcfa_calc(growth_rate, ttm_fcf, margin_of_safety, p_fcf_value)
         self.set_data("intrin_no_mos", add_commas_to_num(intrinsic_value))
         self.set_data("intrin_with_mos", add_commas_to_num(intrinsic_value_with_mos))
+
+    def calculate_sticker_price(self):
+        ttm_eps = getattr(self, "sticker_eps").get()
+        growth_rate = getattr(self, "sticker_growth_rate").get()
+        future_pe = getattr(self, "sticker_future_pe").get()
+        margin_of_safety = getattr(self, "sticker_calc_mos").get()
+
+        try:
+            ttm_eps = float(ttm_eps)
+            growth_rate = float(growth_rate)
+            future_pe = float(future_pe)
+            margin_of_safety = float(margin_of_safety)
+        except ValueError:
+            print("Ensure all inputs are valid")
+            return
+
+        current_price, current_price_with_mos = get_sticker_price(growth_rate, ttm_eps, margin_of_safety, future_pe)
+        self.set_data("sticker_no_mos", current_price)
+        self.set_data("sticker_with_mos", current_price_with_mos)
 
     def set_data(self, entry_name, data):
         entry = getattr(self, entry_name)
@@ -342,7 +361,7 @@ class GUI:
             setattr(self, sticker_price_entries[i], entry)
             entry.grid(row=i + 1, column=1)
 
-        sticker_calc_button = tk.Button(sticker_calc_frame, text="Calculate")
+        sticker_calc_button = tk.Button(sticker_calc_frame, text="Calculate", command=self.calculate_sticker_price)
         sticker_calc_button.grid(columnspan=2, sticky="EW", pady=10)
 
         for i in range(4, 6):
