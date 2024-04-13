@@ -4,7 +4,8 @@ from scraper import (get_income_statement, get_ttm_income_statement, get_balance
                      get_ratios_and_metrics, get_analyst_5_year_growth_prediction)
 from data_processing import (get_market_cap, get_years_available, get_company_name_and_price, get_ttm_fcf, get_ttm_eps,
                              get_sales_growth_rates, get_eps_growth_rates, get_free_cash_flow_growth_rates,
-                             get_equity_growth_rates, get_roic, get_pe_ratio, get_price_fcf_ratio, get_debt_fcf_ratio)
+                             get_equity_growth_rates, get_roic, get_pe_ratio, get_price_fcf_ratio,
+                             get_debt_equity_ratio)
 
 
 class GUI:
@@ -16,10 +17,37 @@ class GUI:
 
     def handle_search(self):
         search_value = getattr(self, "search_bar").get().upper()
+        if not search_value.strip():
+            print("No ticker detecter")
+            return
         try:
             self.get_stock_info(search_value)
         except (ValueError, KeyError):
             print("There was a problem finding this stock")
+            return
+
+        self.fill_calculators()
+
+    def fill_calculators(self):
+        analsyt_est_growth = getattr(self, "est_growth_data").get()
+        analsyt_est_growth = analsyt_est_growth.replace("%", "")
+        ttm_fcf = getattr(self, "fcf_data").get()
+        ttm_fcf = ttm_fcf.replace(",", "")
+        p_fcf_avg = getattr(self, "ten_year_p_fcf").get()
+        ttm_eps = getattr(self, "eps_data").get()
+        pe_avg = getattr(self, "ten_year_pe").get()
+        self.set_data("dcfa_growth_rate", analsyt_est_growth)
+        self.set_data("dcfa_ttm_fcf", ttm_fcf)
+        self.set_data("dcfa_p_fcf", p_fcf_avg)
+        self.set_data("dcfa_mos", 50)
+        self.set_data("sticker_eps", ttm_eps)
+        self.set_data("sticker_growth_rate", analsyt_est_growth)
+        self.set_data("sticker_future_pe", pe_avg)
+        self.set_data("sticker_calc_mos", 50)
+        self.set_data("intrin_no_mos", "")
+        self.set_data("intrin_with_mos", "")
+        self.set_data("sticker_no_mos", "")
+        self.set_data("sticker_with_mos", "")
 
     def get_stock_info(self, ticker):
         income_statement = get_income_statement(ticker)
@@ -83,7 +111,7 @@ class GUI:
         self.set_data("five_year_p_fcf", five_p_fcf)
         self.set_data("ten_year_p_fcf", ten_p_fcf)
 
-        ttm_d_fcf, five_d_fcf, ten_d_fcf = get_debt_fcf_ratio(ratios_and_metrics, years_available)
+        ttm_d_fcf, five_d_fcf, ten_d_fcf = get_debt_equity_ratio(ratios_and_metrics, years_available)
         self.set_data("ttm_d_fcf", ttm_d_fcf)
         self.set_data("five_year_d_fcf", five_d_fcf)
         self.set_data("ten_year_d_fcf", ten_d_fcf)
@@ -241,7 +269,7 @@ class GUI:
     def ratios_data(self, historic_data_frame):
         ratios_frame = tk.Frame(historic_data_frame)
         ratios_frame.pack(padx=(25, 0), side=tk.RIGHT)
-        ratio_labels = ["ROIC (%)", "PE Ratio", "P/FCF Ratio", "Debt/FCF Ratio"]
+        ratio_labels = ["ROIC (%)", "PE Ratio", "P/FCF Ratio", "Debt/Equity Ratio"]
         time_labels = ["TTM", "5 Year", "10 Year"]
 
         for i in range(len(time_labels)):

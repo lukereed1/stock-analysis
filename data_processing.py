@@ -130,16 +130,16 @@ def get_pe_ratio(ratios, years):
     return find_ratio_averages(historic_pe, years)
 
 
-def get_debt_fcf_ratio(ratios, years):
+def get_debt_equity_ratio(ratios, years):
     try:
-        debt_fcf = ratios.find("span", string="Debt / FCF Ratio").parent.parent
-        year_columns = debt_fcf.find_all("td")
+        debt_equity = ratios.find("span", string="Debt / Equity Ratio").parent.parent
+        year_columns = debt_equity.find_all("td")
     except AttributeError:
         print("There was a problem getting Debt/FCF Ratios")
         return
 
-    historic_debt_fcf = get_historic_ratio_data_from_rows(year_columns, years)
-    return find_ratio_averages(historic_debt_fcf, years)
+    historic_debt_equity = get_historic_ratio_data_from_rows(year_columns, years)
+    return find_ratio_averages(historic_debt_equity, years)
 
 
 def get_price_fcf_ratio(ratios, years):

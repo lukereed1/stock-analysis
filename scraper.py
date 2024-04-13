@@ -38,3 +38,5 @@ def get_analyst_5_year_growth_prediction(ticker):
         return rate
     except AttributeError:
         return "Problem finding analyst growth rate estimate"
+
+
