@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import messagebox
 from calcs import dcfa_calc, get_sticker_price, calculate_growth_rate, add_commas_to_num
 from scraper import (get_income_statement, get_ttm_income_statement, get_balance_sheet,
                      get_ratios_and_metrics, get_analyst_5_year_growth_prediction)
@@ -18,15 +19,20 @@ class GUI:
     def handle_search(self):
         search_value = getattr(self, "search_bar").get().upper()
         if not search_value.strip():
-            print("No ticker detecter")
+
+            self.popup_message("Enter a valid ticker")
             return
         try:
             self.get_stock_info(search_value)
         except (ValueError, KeyError):
-            print("There was a problem finding this stock")
+            self.popup_message("There was a problem finding this stock")
             return
 
         self.fill_calculators()
+
+    @staticmethod
+    def popup_message(message):
+        messagebox.showinfo("Error", message)
 
     def fill_calculators(self):
         analsyt_est_growth = getattr(self, "est_growth_data").get()
@@ -125,7 +131,7 @@ class GUI:
             end_amount = float(end_amount)
             years = float(years)
         except ValueError:
-            print("All values must be a positive number")
+            self.popup_message("All values must be a positive number")
             return
 
         growth_rate = calculate_growth_rate(years, start_amount, end_amount)
@@ -143,7 +149,7 @@ class GUI:
             p_fcf_value = float(p_fcf_value)
             margin_of_safety = float(margin_of_safety)
         except ValueError:
-            print("Ensure all inputs are valid")
+            self.popup_message("Ensure all inputs are valid")
             return
 
         intrinsic_value, intrinsic_value_with_mos = dcfa_calc(growth_rate, ttm_fcf, margin_of_safety, p_fcf_value)
@@ -162,7 +168,7 @@ class GUI:
             future_pe = float(future_pe)
             margin_of_safety = float(margin_of_safety)
         except ValueError:
-            print("Ensure all inputs are valid")
+            self.popup_message("Ensure all inputs are valid")
             return
 
         current_price, current_price_with_mos = get_sticker_price(growth_rate, ttm_eps, margin_of_safety, future_pe)
