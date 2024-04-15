@@ -248,13 +248,16 @@ class GUI:
 #                                              BUTTON CLICK HANDLERS                                                   #
 ########################################################################################################################
     def handle_search(self):
-        search_value = getattr(self, "search_bar").get().upper()
-        if not search_value.strip():
-            self.popup_message("Enter a valid ticker")
+        try:
+            search_value = getattr(self, "search_bar").get().upper()
+            if not search_value.strip():
+                self.popup_message("Enter a valid ticker")
+                return
+
+            self.get_stock_info(search_value)
+        except (AttributeError, KeyError):
+            self.popup_message("There was a problem finding this stock")
             return
-
-        self.get_stock_info(search_value)
-
         self.set_calculators()
 
     def handle_equity_graph_button(self):
@@ -557,10 +560,6 @@ class GUI:
 ########################################################################################################################
 #                                                      UTIL                                                            #
 ########################################################################################################################
-    @staticmethod
-    def create_label(frame, text, row, col, padx=0, pady=0):
-        label = tk.Label(frame, text=text)
-        label.grid(row=row, column=col, padx=padx, pady=pady)
 
     @staticmethod
     def create_graph_button(row, col, frame, command):
