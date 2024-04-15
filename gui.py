@@ -7,6 +7,7 @@ from data_processing import (get_market_cap, get_years_available, get_company_na
                              get_sales_growth_rates, get_eps_growth_rates, get_free_cash_flow_growth_rates,
                              get_equity_growth_rates, get_roic, get_pe_ratio, get_price_fcf_ratio,
                              get_debt_equity_ratio)
+import matplotlib.pyplot as plt
 
 
 class GUI:
@@ -19,7 +20,6 @@ class GUI:
     def handle_search(self):
         search_value = getattr(self, "search_bar").get().upper()
         if not search_value.strip():
-
             self.popup_message("Enter a valid ticker")
             return
         try:
@@ -29,6 +29,118 @@ class GUI:
             return
 
         self.fill_calculators()
+
+    def handle_equity_graph_button(self):
+        equity_map = self.create_data_map("historic_equity", "income")
+        company_name = getattr(self, "name_data").get()
+
+        self.show_chart(
+            f"Equity Chart for {company_name}",
+            "Year",
+            "Equity (Millions)",
+            equity_map
+        )
+
+    def handle_eps_graph_button(self):
+        eps_map = self.create_data_map("historic_eps", "income")
+        company_name = getattr(self, "name_data").get()
+
+        self.show_chart(
+            f"EPS Chart for {company_name}",
+            "Year",
+            "EPS",
+            eps_map
+        )
+
+    def handle_sales_button(self):
+        sales_map = self.create_data_map("historic_sales", "income")
+        company_name = getattr(self, "name_data").get()
+
+        self.show_chart(
+            f"Sales Chart for {company_name}",
+            "Year",
+            "Sales (Millions)",
+            sales_map
+        )
+
+    def handle_fcf_graph_button(self):
+        fcf_map = self.create_data_map("historic_cash", "income")
+        company_name = getattr(self, "name_data").get()
+
+        self.show_chart(
+            f"Free Cash Flow Chart for {company_name}",
+            "Year",
+            "FCF (Millions)",
+            fcf_map
+        )
+
+    def handle_roic_graph_button(self):
+        roic_map = self.create_data_map("historic_roic", "balance")
+        company_name = getattr(self, "name_data").get()
+
+        self.show_chart(
+            f"ROIC (%) Chart for {company_name}",
+            "Year",
+            "ROIC (%)",
+            roic_map
+        )
+
+    def handle_pe_graph_button(self):
+        pe_map = self.create_data_map("historic_pe", "balance")
+        company_name = getattr(self, "name_data").get()
+
+        self.show_chart(
+            f"PE Ratio Chart for {company_name}",
+            "Year",
+            "PE Ratio",
+            pe_map
+        )
+
+    def handle_p_fcf_graph_buttonm(self):
+        p_fcf_map = self.create_data_map("historic_p_fcf", "balance")
+        company_name = getattr(self, "name_data").get()
+
+        self.show_chart(
+            f"P/FCF Ratio Chart for {company_name}",
+            "Year",
+            "Price/FCF Ratio",
+            p_fcf_map
+        )
+
+    def handle_debt_equity_graph_button(self):
+        debt_equity_map = self.create_data_map("historic_debt_equity", "balance")
+        company_name = getattr(self, "name_data").get()
+
+        self.show_chart(
+            f"Debt/Equity Ratio Chart for {company_name}",
+            "Year",
+            "Debt/Equity Ratio",
+            debt_equity_map
+        )
+
+    def create_data_map(self, metric, statement):
+        data_map = {}
+        historic_data = getattr(self, metric)
+        if statement == "balance":
+            year_list = getattr(self, "balance_year_list")
+            for i in range(len(year_list)):
+                data_map[year_list[i]] = historic_data[i + 1]
+        else:
+            year_list = getattr(self, "income_year_list")
+            for i in range(len(year_list)):
+                data_map[year_list[i]] = historic_data[i]
+
+        return data_map
+
+    def show_chart(self, title, x_title, y_title, data_map):
+        x_data = list(data_map.keys())[::-1]
+        y_data = list(data_map.values())[::-1]
+        fig = plt.figure(figsize=(8, 5))
+        plt.bar(x_data, y_data, color="blue", width=0.7)
+        plt.xlabel(x_title)
+        plt.ylabel(y_title)
+        plt.title(title)
+        plt.show()
 
     @staticmethod
     def popup_message(message):
@@ -60,10 +172,11 @@ class GUI:
         balance_sheet = get_balance_sheet(ticker)
         ratios_and_metrics = get_ratios_and_metrics(ticker)
         ttm_income_statement = get_ttm_income_statement(ticker)
-        income_years_available = get_years_available(income_statement)
-        balance_years_available = get_years_available(balance_sheet)
+        income_years_available, income_year_list = get_years_available(income_statement)
+        balance_years_available, balance_year_list = get_years_available(balance_sheet)
         analyst_estimated_growth = get_analyst_5_year_growth_prediction(ticker)
-
+        setattr(self, "income_year_list", income_year_list)
+        setattr(self, "balance_year_list", balance_year_list)
         self.set_summary(income_statement, ttm_income_statement, ratios_and_metrics, analyst_estimated_growth)
         self.set_growth(income_statement, balance_sheet, income_years_available, balance_years_available)
         self.set_ratios(ratios_and_metrics, balance_years_available)
@@ -81,46 +194,54 @@ class GUI:
         self.set_data("eps_data", ttm_eps)
 
     def set_growth(self, income_statement, balance_sheet, income_years_available, balance_years_available):
-        one_equity, five_equity, ten_equity = get_equity_growth_rates(balance_sheet, balance_years_available)
-        self.set_data("one_year_equity", one_equity)
-        self.set_data("five_year_equity", five_equity)
-        self.set_data("ten_year_equity", ten_equity)
+        equity_averages, all_equity = get_equity_growth_rates(balance_sheet, balance_years_available)
+        setattr(self, "historic_equity", all_equity)
+        self.set_data("one_year_equity", equity_averages[0])
+        self.set_data("five_year_equity", equity_averages[1])
+        self.set_data("ten_year_equity", equity_averages[2])
 
-        one_eps, five_eps, ten_eps = get_eps_growth_rates(income_statement, income_years_available)
-        self.set_data("one_year_eps", one_eps)
-        self.set_data("five_year_eps", five_eps)
-        self.set_data("ten_year_eps", ten_eps)
+        eps_averages, all_eps = get_eps_growth_rates(income_statement, income_years_available)
+        setattr(self, "historic_eps", all_eps)
+        self.set_data("one_year_eps", eps_averages[0])
+        self.set_data("five_year_eps", eps_averages[1])
+        self.set_data("ten_year_eps", eps_averages[2])
 
-        one_sales, five_sales, ten_sales = get_sales_growth_rates(income_statement, income_years_available)
-        self.set_data("one_year_sales", one_sales)
-        self.set_data("five_year_sales", five_sales)
-        self.set_data("ten_year_sales", ten_sales)
+        sales_averages, all_sales = get_sales_growth_rates(income_statement, income_years_available)
+        setattr(self, "historic_sales", all_sales)
+        self.set_data("one_year_sales", sales_averages[0])
+        self.set_data("five_year_sales", sales_averages[1])
+        self.set_data("ten_year_sales", sales_averages[2])
 
-        one_cash, five_cash, ten_cash = get_free_cash_flow_growth_rates(income_statement, income_years_available)
-        self.set_data("one_year_cash", one_cash)
-        self.set_data("five_year_cash", five_cash)
-        self.set_data("ten_year_cash", ten_cash)
+        cash_averages, all_cash = get_free_cash_flow_growth_rates(income_statement, income_years_available)
+        setattr(self, "historic_cash", all_cash)
+        self.set_data("one_year_cash", cash_averages[0])
+        self.set_data("five_year_cash", cash_averages[1])
+        self.set_data("ten_year_cash", cash_averages[2])
 
     def set_ratios(self, ratios_and_metrics, years_available):
-        ttm_roic, five_roic, ten_roic = get_roic(ratios_and_metrics, years_available)
-        self.set_data("ttm_roic", ttm_roic)
-        self.set_data("five_year_roic", five_roic)
-        self.set_data("ten_year_roic", ten_roic)
+        roic_averages, all_roic = get_roic(ratios_and_metrics, years_available)
+        setattr(self, "historic_roic", all_roic)
+        self.set_data("ttm_roic", roic_averages[0])
+        self.set_data("five_year_roic", roic_averages[1])
+        self.set_data("ten_year_roic", roic_averages[2])
 
-        ttm_pe, five_pe, ten_pe = get_pe_ratio(ratios_and_metrics, years_available)
-        self.set_data("ttm_pe", ttm_pe)
-        self.set_data("five_year_pe", five_pe)
-        self.set_data("ten_year_pe", ten_pe)
+        pe_averages, all_pe = get_pe_ratio(ratios_and_metrics, years_available)
+        setattr(self, "historic_pe", all_pe)
+        self.set_data("ttm_pe", pe_averages[0])
+        self.set_data("five_year_pe", pe_averages[1])
+        self.set_data("ten_year_pe", pe_averages[2])
 
-        ttm_p_fcf, five_p_fcf, ten_p_fcf = get_price_fcf_ratio(ratios_and_metrics, years_available)
-        self.set_data("ttm_p_fcf", ttm_p_fcf)
-        self.set_data("five_year_p_fcf", five_p_fcf)
-        self.set_data("ten_year_p_fcf", ten_p_fcf)
+        p_fcf_averages, all_p_fcf = get_price_fcf_ratio(ratios_and_metrics, years_available)
+        setattr(self, "historic_p_fcf", all_p_fcf)
+        self.set_data("ttm_p_fcf", p_fcf_averages[0])
+        self.set_data("five_year_p_fcf", p_fcf_averages[1])
+        self.set_data("ten_year_p_fcf", p_fcf_averages[2])
 
-        ttm_d_fcf, five_d_fcf, ten_d_fcf = get_debt_equity_ratio(ratios_and_metrics, years_available)
-        self.set_data("ttm_d_fcf", ttm_d_fcf)
-        self.set_data("five_year_d_fcf", five_d_fcf)
-        self.set_data("ten_year_d_fcf", ten_d_fcf)
+        debt_equity_averages, all_debt_equity = get_debt_equity_ratio(ratios_and_metrics, years_available)
+        setattr(self, "historic_debt_equity", all_debt_equity)
+        self.set_data("ttm_d_fcf", debt_equity_averages[0])
+        self.set_data("five_year_d_fcf", debt_equity_averages[1])
+        self.set_data("ten_year_d_fcf", debt_equity_averages[2])
 
     def calculate_growth_rate(self):
         start_amount = getattr(self, "start_amount").get()
@@ -248,6 +369,14 @@ class GUI:
             label.grid(row=i + 1, column=0, padx=(0, 10))
 
         self.growth_data_entries(growth_rates_frame)
+        self.graph_button(1, 4, growth_rates_frame, self.handle_equity_graph_button)
+        self.graph_button(2, 4, growth_rates_frame, self.handle_eps_graph_button)
+        self.graph_button(3, 4, growth_rates_frame, self.handle_sales_button)
+        self.graph_button(4, 4, growth_rates_frame, self.handle_fcf_graph_button)
+
+    def graph_button(self, row, col, frame, command):
+        button = tk.Button(frame, text=">", command=command)
+        button.grid(row=row, column=col)
 
     def growth_data_entries(self, growth_rates_frame):
         equity_labels = ["one_year_equity", "five_year_equity", "ten_year_equity"]
@@ -290,6 +419,11 @@ class GUI:
             label.grid(row=i + 1, column=0, padx=(0, 10))
 
         self.ratios_data_entries(ratios_frame)
+        self.graph_button(1, 4, ratios_frame, self.handle_roic_graph_button)
+        self.graph_button(2, 4, ratios_frame, self.handle_pe_graph_button)
+        self.graph_button(3, 4, ratios_frame, self.handle_p_fcf_graph_buttonm)
+        self.graph_button(4, 4, ratios_frame, self.handle_debt_equity_graph_button)
+
 
     def ratios_data_entries(self, ratio_frame):
         roic_labels = ["ttm_roic", "five_year_roic", "ten_year_roic"]

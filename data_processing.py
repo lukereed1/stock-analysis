@@ -10,7 +10,7 @@ def get_sales_growth_rates(income_statement, years):
         return
 
     historic_profits = get_historic_growth_data_from_rows(year_columns, years)
-    return find_growth_rates(historic_profits, years)
+    return find_growth_rates(historic_profits, years), historic_profits
 
 
 def get_eps_growth_rates(income_statement, years):
@@ -22,7 +22,7 @@ def get_eps_growth_rates(income_statement, years):
         return
 
     historic_eps = get_historic_growth_data_from_rows(year_columns, years)
-    return find_growth_rates(historic_eps, years)
+    return find_growth_rates(historic_eps, years), historic_eps
 
 
 def get_free_cash_flow_growth_rates(income_statement, years):
@@ -34,7 +34,7 @@ def get_free_cash_flow_growth_rates(income_statement, years):
         return
 
     historic_fcf = get_historic_growth_data_from_rows(year_columns, years)
-    return find_growth_rates(historic_fcf, years)
+    return find_growth_rates(historic_fcf, years), historic_fcf
 
 
 def get_equity_growth_rates(balance_sheet, years):
@@ -46,7 +46,7 @@ def get_equity_growth_rates(balance_sheet, years):
         return
 
     historic_equity = get_historic_growth_data_from_rows(year_columns, years)
-    return find_growth_rates(historic_equity, years)
+    return find_growth_rates(historic_equity, years), historic_equity
 
 
 def find_growth_rates(historic_data, years):
@@ -102,7 +102,7 @@ def get_roic(ratios, years):
         return
 
     historic_roic = get_historic_ratio_data_from_rows(year_columns, years)
-    return find_ratio_averages(historic_roic, years)
+    return find_ratio_averages(historic_roic, years), historic_roic
 
 
 def find_ratio_averages(historic_data, years):
@@ -127,7 +127,7 @@ def get_pe_ratio(ratios, years):
         return
 
     historic_pe = get_historic_ratio_data_from_rows(year_columns, years)
-    return find_ratio_averages(historic_pe, years)
+    return find_ratio_averages(historic_pe, years), historic_pe
 
 
 def get_debt_equity_ratio(ratios, years):
@@ -139,7 +139,7 @@ def get_debt_equity_ratio(ratios, years):
         return
 
     historic_debt_equity = get_historic_ratio_data_from_rows(year_columns, years)
-    return find_ratio_averages(historic_debt_equity, years)
+    return find_ratio_averages(historic_debt_equity, years), historic_debt_equity
 
 
 def get_price_fcf_ratio(ratios, years):
@@ -151,7 +151,7 @@ def get_price_fcf_ratio(ratios, years):
         return
 
     historic_price_fcf = get_historic_ratio_data_from_rows(year_columns, years)
-    return find_ratio_averages(historic_price_fcf, years)
+    return find_ratio_averages(historic_price_fcf, years), historic_price_fcf
 
 
 def get_ttm_fcf(ttm_income_statement):
@@ -182,13 +182,20 @@ def get_market_cap(ratios):
 
 
 def get_years_available(soup):
-    years = len(soup.find_all("th", {"class": "border-b"}))
+    data_columns = len(soup.find_all("th", {"class": "border-b"}))
+
     #  Removes columns that don't reflect a certain year
-    if years > 11:
-        years -= 2
+    if data_columns > 11:
+        data_columns -= 2
     else:
-        years -= 1
-    return years
+        data_columns -= 1
+    available_years = []
+    year_row = soup.find("th", string="Year").parent
+    years = year_row.find_all("th")
+    for i in range(1, data_columns + 1):
+        available_years.append(years[i].text)
+
+    return data_columns, available_years
 
 
 def get_company_name_and_price(income_statement):
