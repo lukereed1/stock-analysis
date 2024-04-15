@@ -31,7 +31,6 @@ class GUI:
     def create_search_bar_section(self):
         search_frame = tk.Frame(self.root)
         search_frame.pack(pady=20)
-
         search_label = tk.Label(search_frame, text="Enter Stock Ticker:")
         search_label.grid(row=0, column=0, padx=5)
 
@@ -253,11 +252,8 @@ class GUI:
         if not search_value.strip():
             self.popup_message("Enter a valid ticker")
             return
-        try:
-            self.get_stock_info(search_value)
-        except (ValueError, KeyError):
-            self.popup_message("There was a problem finding this stock")
-            return
+
+        self.get_stock_info(search_value)
 
         self.set_calculators()
 
@@ -561,6 +557,10 @@ class GUI:
 ########################################################################################################################
 #                                                      UTIL                                                            #
 ########################################################################################################################
+    @staticmethod
+    def create_label(frame, text, row, col, padx=0, pady=0):
+        label = tk.Label(frame, text=text)
+        label.grid(row=row, column=col, padx=padx, pady=pady)
 
     @staticmethod
     def create_graph_button(row, col, frame, command):

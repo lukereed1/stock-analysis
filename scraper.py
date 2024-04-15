@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import requests
-import yahoo_fin.stock_info as si
+import pandas as pd
+from io import StringIO
 
 
 def get_soup(url):
@@ -32,11 +33,12 @@ def get_ratios_and_metrics(ticker):
     return ratios_and_metrics
 
 
-def get_analyst_5_year_growth_prediction(ticker):
+def get_analyst_5_year_growth_prediction(ticker, headers={'User-agent': 'Mozilla/5.0'}):
     try:
-        rate = si.get_analysts_info(ticker)['Growth Estimates'][ticker][4]
-        return rate
+        url = f"https://finance.yahoo.com/quote/{ticker}/analysis"
+        tables = pd.read_html(StringIO(requests.get(url, headers=headers).text))
+        analyst_5yr_estimate = tables[5][ticker][4]
+        return analyst_5yr_estimate
     except AttributeError:
         return "Problem finding analyst growth rate estimate"
-
 
