@@ -8,7 +8,8 @@ from data_processing import (get_market_cap, get_years_available, get_company_na
                              get_eps_growth_rates, get_free_cash_flow_growth_rates,
                              get_equity_growth_rates, get_roic, get_pe_ratio,
                              get_price_fcf_ratio, get_debt_equity_ratio)
-import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
 
 class GUI:
@@ -577,16 +578,30 @@ class GUI:
         sticker_price_calc_label.grid(row=0, columnspan=2, sticky="EW", pady=(0, 10), padx=(20, 0))
         sticker_price_calc_label.config(font=("tkDefaultFont", 16, "bold"))
 
-    @staticmethod
-    def show_chart(title, x_title, y_title, data_map):
+    def show_chart(self, title, x_title, y_title, data_map):
         x_data = list(data_map.keys())[::-1]
         y_data = list(data_map.values())[::-1]
-        fig = plt.figure(figsize=(8, 5))
-        plt.bar(x_data, y_data, color="blue", width=0.7)
-        plt.xlabel(x_title)
-        plt.ylabel(y_title)
-        plt.title(title)
-        plt.show()
+        graph_window = self.create_new_window(title)
+        fig = Figure(figsize=(8, 5), dpi=100)
+
+        plot = fig.add_subplot(111)
+        plot.bar(x_data, y_data, color="blue", width=0.7)
+        plot.set_xlabel(x_title)
+        plot.set_ylabel(y_title)
+        plot.set_title(title)
+
+        canvas = FigureCanvasTkAgg(fig, master=graph_window)
+        canvas.draw()
+        canvas.get_tk_widget().pack()
+
+        toolbar = NavigationToolbar2Tk(canvas, graph_window)
+        toolbar.update()
+        canvas.get_tk_widget().pack()
+
+    def create_new_window(self, title):
+        new_window = tk.Toplevel(self.root)
+        new_window.title(title)
+        return new_window
 
     @staticmethod
     def popup_message(message):
