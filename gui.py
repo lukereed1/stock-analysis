@@ -19,10 +19,8 @@ class GUI:
         root.geometry("1000x650")
         self.create_gui_sections()
 
-########################################################################################################################
-#                                                 CREATING LAYOUT                                                      #
-########################################################################################################################
 
+    # Creating Layout
     def create_gui_sections(self):
         self.create_search_bar_section()
         self.create_business_summary_section()
@@ -245,9 +243,8 @@ class GUI:
             setattr(self, sticker_price_entries[i], entry)
             entry.grid(row=i + 2, column=1)
 
-########################################################################################################################
-#                                              BUTTON CLICK HANDLERS                                                   #
-########################################################################################################################
+
+    # Button click handlers
     def handle_search(self):
         try:
             search_value = getattr(self, "search_bar").get().upper()
@@ -501,10 +498,8 @@ class GUI:
         self.set_entry_data("five_year_d_fcf", debt_equity_averages[1])
         self.set_entry_data("ten_year_d_fcf", debt_equity_averages[2])
 
-########################################################################################################################
-#                                                  CALCULATIONS                                                        #
-########################################################################################################################
 
+    # Calcs
     def calculate_growth_rate(self):
         start_amount = getattr(self, "start_amount").get()
         end_amount = getattr(self, "end_amount").get()
@@ -558,10 +553,8 @@ class GUI:
         self.set_entry_data("sticker_no_mos", current_price)
         self.set_entry_data("sticker_with_mos", current_price_with_mos)
 
-########################################################################################################################
-#                                                      UTIL                                                            #
-########################################################################################################################
 
+    # Util
     @staticmethod
     def create_graph_button(row, col, frame, command):
         button = tk.Button(frame, text=">", command=command)

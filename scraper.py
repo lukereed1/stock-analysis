@@ -39,6 +39,6 @@ def get_analyst_5_year_growth_prediction(ticker, headers={'User-agent': 'Mozilla
         tables = pd.read_html(StringIO(requests.get(url, headers=headers).text))
         analyst_5yr_estimate = tables[5][ticker][4]
         return analyst_5yr_estimate
-    except AttributeError:
-        return "Problem finding analyst growth rate estimate"
+    except (AttributeError, IndexError):
+        return "Not Found"
 
