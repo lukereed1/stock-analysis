@@ -1,13 +1,13 @@
 import tkinter as tk
 from tkinter import messagebox
 from calcs import dcfa_calc, get_sticker_price, calculate_growth_rate, add_commas_to_num
-from scraper import (get_income_statement, get_ttm_income_statement, get_balance_sheet,
-                     get_ratios_and_metrics, get_analyst_5_year_growth_prediction)
-from data_processing import (get_market_cap, get_years_available, get_company_name_and_price,
+from scraper import (get_income_statement, get_balance_sheet,
+                     get_ratios, get_cash_flow_statement, get_ttm_income_statement)
+from data_processing import (get_market_cap, get_income_years_available, get_company_name_and_price,
                              get_ttm_fcf, get_ttm_eps, get_sales_growth_rates,
                              get_eps_growth_rates, get_free_cash_flow_growth_rates,
                              get_equity_growth_rates, get_roic, get_pe_ratio,
-                             get_price_fcf_ratio, get_debt_equity_ratio)
+                             get_price_fcf_ratio, get_debt_equity_ratio, get_balance_years_available)
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
@@ -18,7 +18,6 @@ class GUI:
         root.title("Stock Analysis")
         root.geometry("1000x650")
         self.create_gui_sections()
-
 
     # Creating Layout
     def create_gui_sections(self):
@@ -243,19 +242,12 @@ class GUI:
             setattr(self, sticker_price_entries[i], entry)
             entry.grid(row=i + 2, column=1)
 
-
-    # Button click handlers
+    #  Button click handlers
     def handle_search(self):
-        try:
-            search_value = getattr(self, "search_bar").get().upper()
-            if not search_value.strip():
-                self.popup_message("Enter a valid ticker")
-                return
-
-            self.get_stock_info(search_value)
-        except (AttributeError, KeyError):
-            self.popup_message("There was a problem finding this stock")
-            return
+        search_value = getattr(self, "search_bar").get().upper()
+        if not search_value.strip():
+            self.popup_message("Enter a valid ticker")
+        self.get_stock_info(search_value)
         self.set_calculators()
 
     def handle_equity_graph_button(self):
@@ -393,22 +385,25 @@ class GUI:
 
         return data_map
 
-########################################################################################################################
-#                                                  GET/SET DATA                                                        #
-########################################################################################################################
+    #  Get/set
     def get_stock_info(self, ticker):
         income_statement = get_income_statement(ticker)
-        balance_sheet = get_balance_sheet(ticker)
-        ratios_and_metrics = get_ratios_and_metrics(ticker)
         ttm_income_statement = get_ttm_income_statement(ticker)
-        income_years_available, income_year_list = get_years_available(income_statement)
-        balance_years_available, balance_year_list = get_years_available(balance_sheet)
-        analyst_estimated_growth = get_analyst_5_year_growth_prediction(ticker)
+        balance_sheet = get_balance_sheet(ticker)
+        ratios_and_metrics = get_ratios(ticker)
+        cash_flow_statement = get_cash_flow_statement(ticker)
+        income_years_available, income_year_list = get_income_years_available(income_statement)
+        balance_years_available, balance_year_list = get_balance_years_available(balance_sheet)
+
+        print(f"balance years av: {income_year_list}")
+        print(f"income years av: {balance_year_list}")
+
+        # analyst_estimated_growth = get_analyst_5_year_growth_prediction(ticker)
         setattr(self, "income_year_list", income_year_list)
         setattr(self, "balance_year_list", balance_year_list)
-        self.set_summary(income_statement, ttm_income_statement, ratios_and_metrics, analyst_estimated_growth)
+        self.set_summary(income_statement)
         self.set_growth(income_statement, balance_sheet, income_years_available, balance_years_available)
-        self.set_ratios(ratios_and_metrics, balance_years_available)
+        # self.set_ratios(ratios_and_metrics, balance_years_available)
 
     def set_entry_data(self, entry_name, data):
         entry = getattr(self, entry_name)
@@ -436,13 +431,17 @@ class GUI:
         self.set_entry_data("sticker_no_mos", "")
         self.set_entry_data("sticker_with_mos", "")
 
-    def set_summary(self, income_statement, ttm_income_statement, ratios_and_metrics, analyst_growth_est):
-        name, price = get_company_name_and_price(income_statement)
-        market_cap = get_market_cap(ratios_and_metrics)
+    def set_summary(self, ttm_income_statement):
+        name, price = get_company_name_and_price(ttm_income_statement)
+        market_cap = get_market_cap(ttm_income_statement, price)
         ttm_fcf = get_ttm_fcf(ttm_income_statement)
         ttm_eps = get_ttm_eps(ttm_income_statement)
+        print(f"name: {name}")
+        print(f"price: {price}")
+        print(f"market cap: {market_cap}")
+
         self.set_entry_data("name_data", name)
-        self.set_entry_data("est_growth_data", analyst_growth_est)
+        # self.set_entry_data("est_growth_data", analyst_growth_est)
         self.set_entry_data("cap_data", market_cap)
         self.set_entry_data("price_data", price)
         self.set_entry_data("fcf_data", ttm_fcf)
@@ -498,7 +497,6 @@ class GUI:
         self.set_entry_data("five_year_d_fcf", debt_equity_averages[1])
         self.set_entry_data("ten_year_d_fcf", debt_equity_averages[2])
 
-
     # Calcs
     def calculate_growth_rate(self):
         start_amount = getattr(self, "start_amount").get()
@@ -552,7 +550,6 @@ class GUI:
         current_price, current_price_with_mos = get_sticker_price(growth_rate, ttm_eps, margin_of_safety, future_pe)
         self.set_entry_data("sticker_no_mos", current_price)
         self.set_entry_data("sticker_with_mos", current_price_with_mos)
-
 
     # Util
     @staticmethod
