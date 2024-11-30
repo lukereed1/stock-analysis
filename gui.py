@@ -8,7 +8,7 @@ from data_processing import (get_market_cap, get_years_available, get_company_na
                              get_ttm_fcf, get_ttm_eps, get_sales_growth_rates,
                              get_eps_growth_rates, get_free_cash_flow_growth_rates,
                              get_equity_growth_rates, get_roic, get_pe_ratio,
-                             get_price_fcf_ratio, get_debt_equity_ratio, get_balance_years_available)
+                             get_price_fcf_ratio, get_debt_equity_ratio)
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
@@ -378,7 +378,7 @@ class GUI:
         data_map = {}
         historic_data = getattr(self, metric)
 
-        year_list = getattr(self, "income_year_list")
+        year_list = getattr(self, "year_list")
         for i in range(len(year_list)):
             data_map[year_list[i]] = historic_data[i]
 
@@ -394,12 +394,9 @@ class GUI:
         cash_flow_statement = get_cash_flow_statement(ticker)
         analyst_estimated_growth = get_analyst_5_year_growth_prediction(ticker)
         self.scraping = False
-        years_available, income_year_list = get_years_available(income_statement)
-        # balance_years_available, balance_year_list = get_balance_years_available(balance_sheet)
-
-
-        setattr(self, "income_year_list", income_year_list)
-        setattr(self, "balance_year_list", income_year_list)
+        print("Scraping complete")
+        years_available, year_list = get_years_available(income_statement)
+        setattr(self, "year_list", year_list)
         self.set_summary(ttm_income_statement, analyst_estimated_growth)
         self.set_growth(income_statement, balance_sheet, years_available, cash_flow_statement)
         self.set_ratios(ratios_and_metrics, years_available)

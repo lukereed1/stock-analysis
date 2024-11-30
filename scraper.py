@@ -1,7 +1,5 @@
 from bs4 import BeautifulSoup
 import requests
-import pandas as pd
-from io import StringIO
 
 from requests import HTTPError
 
@@ -10,7 +8,7 @@ def get_soup(url):
     try:
         headers = {'User-agent': 'Mozilla/5.0'}
         response = requests.get(url, headers=headers)
-        return BeautifulSoup(response.content, "lxml")
+        return BeautifulSoup(response.content, "html.parser")
     except HTTPError as hp:
         print(f"Http Error: {hp}")
 
@@ -51,6 +49,7 @@ def get_ratios(ticker):
 
 
 def get_analyst_5_year_growth_prediction(ticker):
+    print("Getting analyst estimated growth rate")
     try:
         url = f"https://finance.yahoo.com/quote/{ticker}/analysis/"
         soup = get_soup(url)
@@ -59,4 +58,3 @@ def get_analyst_5_year_growth_prediction(ticker):
         return next_year_est
     except (AttributeError, IndexError):
         return "Not Found"
-
