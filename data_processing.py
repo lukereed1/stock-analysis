@@ -1,41 +1,57 @@
 from calcs import calculate_growth_rate
-from scraper import get_income_statement, get_cash_flow_statement, get_ttm_income_statement, get_balance_sheet
+from scraper import get_income_statement, get_cash_flow_statement, get_ttm_income_statement, get_balance_sheet, \
+    get_ratios
 
 
 def get_sales_growth_rates(income_statement, years):
     try:
-        gross_profits = income_statement.find("span", string="Gross Profit").parent.parent
-        year_columns = gross_profits.find_all("td")
+        gross_profits = income_statement.find("span", string="Gross Profit").parent.parent.parent
+        values = gross_profits.find_all("td", class_="formatted-value")
+        data = []
+        for i in range(years):
+            amount = values[i].get_text().replace(",", "")
+            data.append(float(amount))
+        return find_growth_rates(data, years), data
     except AttributeError:
         print("There was a problem finding Gross Profits")
         return
 
-    historic_profits = get_historic_growth_data_from_rows(year_columns, years)
-    return find_growth_rates(historic_profits, years), historic_profits
+    # historic_profits = get_historic_growth_data_from_rows(year_columns, years)
+    # return find_growth_rates(historic_profits, years), historic_profits
 
 
 def get_eps_growth_rates(income_statement, years):
     try:
-        eps = income_statement.find("span", string="EPS (Diluted)").parent.parent
-        year_columns = eps.find_all("td")
+        eps = income_statement.find("span", string="Earnings Per Share (EPS)").parent.parent.parent
+        values = eps.find_all("td", class_="formatted-value")
+        data = []
+        for i in range(years):
+            amount = values[i].get_text().replace(",", "")
+            data.append(float(amount))
+        return find_growth_rates(data, years), data
     except AttributeError:
         print("There was a problem finding EPS")
         return
 
-    historic_eps = get_historic_growth_data_from_rows(year_columns, years)
-    return find_growth_rates(historic_eps, years), historic_eps
+    # historic_eps = get_historic_growth_data_from_rows(year_columns, years)
+    # return find_growth_rates(historic_eps, years), historic_eps
 
 
-def get_free_cash_flow_growth_rates(income_statement, years):
+def get_free_cash_flow_growth_rates(cash_flow_statement, years):
     try:
-        fcf = income_statement.find("span", string="Free Cash Flow").parent.parent
-        year_columns = fcf.find_all("td")
+        fcf = cash_flow_statement.find("span", string="Free Cash Flow").parent.parent.parent
+        values = fcf.find_all("td", class_="formatted-value")
+        data = []
+        for i in range(years):
+            amount = values[i].get_text().replace(",", "")
+            data.append(float(amount))
+        return find_growth_rates(data, years), data
     except AttributeError:
         print("There was a problem finding Free Cash Flow")
         return
 
-    historic_fcf = get_historic_growth_data_from_rows(year_columns, years)
-    return find_growth_rates(historic_fcf, years), historic_fcf
+    # historic_fcf = get_historic_growth_data_from_rows(year_columns, years)
+    # return find_growth_rates(historic_fcf, years), historic_fcf
 
 
 def get_equity_growth_rates(balance_sheet, years):
@@ -46,8 +62,8 @@ def get_equity_growth_rates(balance_sheet, years):
         for i in range(years):
             amount = values[i].get_text().replace(",", "")
             data.append(float(amount))
-        return find_growth_rates(data, years)
-    
+        return find_growth_rates(data, years), data
+
     except AttributeError:
         print("There was a problem finding Equity values")
         return
@@ -102,14 +118,20 @@ def get_historic_ratio_data_from_rows(data_columns, years):
 
 def get_roic(ratios, years):
     try:
-        roic = ratios.find("span", string="Return on Capital (ROIC)").parent.parent
-        year_columns = roic.find_all("td")
+        roic = ratios.find("td", class_="ltm-returnOnInvestedCapital").parent
+        values = roic.find_all("td")
+        values = values[2:]
+        data = []
+        for i in range(years):
+            amount = values[i].get_text().strip().replace("%", "")
+            data.append(float(amount))
+        return find_ratio_averages(data, years), data
     except AttributeError:
         print("There was a problem finding this ratio")
         return
 
-    historic_roic = get_historic_ratio_data_from_rows(year_columns, years)
-    return find_ratio_averages(historic_roic, years), historic_roic
+    # historic_roic = get_historic_ratio_data_from_rows(year_columns, years)
+    # return find_ratio_averages(historic_roic, years), historic_roic
 
 
 def find_ratio_averages(historic_data, years):
@@ -127,38 +149,56 @@ def find_ratio_averages(historic_data, years):
 
 def get_pe_ratio(ratios, years):
     try:
-        pe = ratios.find("span", string="PE Ratio").parent.parent
-        year_columns = pe.find_all("td")
+        pe = ratios.find("td", class_="ltm-priceEarningsRatio").parent
+        values = pe.find_all("td")
+        values = values[2:]
+        data = []
+        for i in range(years):
+            amount = values[i].get_text().strip()
+            data.append(float(amount))
+        return find_ratio_averages(data, years), data
     except AttributeError:
         print("There was a problem finding PE Ratios")
         return
 
-    historic_pe = get_historic_ratio_data_from_rows(year_columns, years)
-    return find_ratio_averages(historic_pe, years), historic_pe
+    # historic_pe = get_historic_ratio_data_from_rows(year_columns, years)
+    # return find_ratio_averages(historic_pe, years), historic_pe
 
 
 def get_debt_equity_ratio(ratios, years):
     try:
-        debt_equity = ratios.find("span", string="Debt / Equity Ratio").parent.parent
-        year_columns = debt_equity.find_all("td")
+        de = ratios.find("td", class_="ltm-debtEquityRatio").parent
+        values = de.find_all("td")
+        values = values[2:]
+        data = []
+        for i in range(years):
+            amount = values[i].get_text().strip()
+            data.append(float(amount))
+        return find_ratio_averages(data, years), data
     except AttributeError:
         print("There was a problem getting Debt/FCF Ratios")
         return
 
-    historic_debt_equity = get_historic_ratio_data_from_rows(year_columns, years)
-    return find_ratio_averages(historic_debt_equity, years), historic_debt_equity
+    # historic_debt_equity = get_historic_ratio_data_from_rows(year_columns, years)
+    # return find_ratio_averages(historic_debt_equity, years), historic_debt_equity
 
 
 def get_price_fcf_ratio(ratios, years):
     try:
-        price_fcf = ratios.find("span", string="P/FCF Ratio").parent.parent
-        year_columns = price_fcf.find_all("td")
+        p_fcf = ratios.find("td", class_="ltm-priceToFreeCashFlowsRatio").parent
+        values = p_fcf.find_all("td")
+        values = values[2:]
+        data = []
+        for i in range(years):
+            amount = values[i].get_text().strip()
+            data.append(float(amount))
+        return find_ratio_averages(data, years), data
     except AttributeError:
         print("There was a problem getting Price/FCF Ratios")
         return
 
-    historic_price_fcf = get_historic_ratio_data_from_rows(year_columns, years)
-    return find_ratio_averages(historic_price_fcf, years), historic_price_fcf
+    # historic_price_fcf = get_historic_ratio_data_from_rows(year_columns, years)
+    # return find_ratio_averages(historic_price_fcf, years), historic_price_fcf
 
 
 def get_ttm_fcf(income_statement):
@@ -185,7 +225,7 @@ def get_market_cap(ttm_income_statement, price):
         print("There was a problem finding the current Market Cap")
 
 
-def get_income_years_available(soup):
+def get_years_available(soup):
     data_columns = len(soup.find_all("th", class_="py-0 px-3 text-center")) - 1
 
     if data_columns > 10:
@@ -219,14 +259,12 @@ def get_company_name_and_price(income_statement):
     try:
         company_details = income_statement.find("div", class_="mx-auto mb-2")
         name = company_details.find("div", class_="mb-0 text-2xl font-bold text-default sm:text-[26px]").get_text()
-        price = company_details.find("div", class_="text-4xl font-bold block sm:inline").get_text()
-
+        price = company_details.find("div", class_="text-4xl").get_text()
         return name, price
     except IndexError:
         print("There was a problem finding the current price")
         return "N/A", "N/A"
 
 
-balance = get_balance_sheet("AAPL")
-get_equity_growth_rates(balance, 10)
-
+income = get_ttm_income_statement("YETI")
+get_company_name_and_price(income)

@@ -2,8 +2,9 @@ import tkinter as tk
 from tkinter import messagebox
 from calcs import dcfa_calc, get_sticker_price, calculate_growth_rate, add_commas_to_num
 from scraper import (get_income_statement, get_balance_sheet,
-                     get_ratios, get_cash_flow_statement, get_ttm_income_statement)
-from data_processing import (get_market_cap, get_income_years_available, get_company_name_and_price,
+                     get_ratios, get_cash_flow_statement, get_ttm_income_statement,
+                     get_analyst_5_year_growth_prediction)
+from data_processing import (get_market_cap, get_years_available, get_company_name_and_price,
                              get_ttm_fcf, get_ttm_eps, get_sales_growth_rates,
                              get_eps_growth_rates, get_free_cash_flow_growth_rates,
                              get_equity_growth_rates, get_roic, get_pe_ratio,
@@ -15,6 +16,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 class GUI:
     def __init__(self, root):
         self.root = root
+        self.scraping = False
         root.title("Stock Analysis")
         root.geometry("1000x650")
         self.create_gui_sections()
@@ -119,7 +121,7 @@ class GUI:
         ratios_frame = tk.Frame(historic_data_frame)
         ratios_frame.pack(padx=(25, 0), side=tk.RIGHT)
         ratio_labels = ["ROIC (%)", "PE Ratio", "P/FCF Ratio", "Debt/Equity Ratio"]
-        time_labels = ["TTM", "5 Year", "10 Year"]
+        time_labels = ["1 Year", "5 Year", "10 Year"]
 
         for i in range(len(time_labels)):
             label = tk.Label(ratios_frame, text=time_labels[i])
@@ -244,6 +246,8 @@ class GUI:
 
     #  Button click handlers
     def handle_search(self):
+        if self.scraping:
+            return
         search_value = getattr(self, "search_bar").get().upper()
         if not search_value.strip():
             self.popup_message("Enter a valid ticker")
@@ -252,7 +256,7 @@ class GUI:
 
     def handle_equity_graph_button(self):
         try:
-            equity_map = self.create_data_map("historic_equity", "income")
+            equity_map = self.create_data_map("historic_equity")
         except AttributeError:
             self.popup_message("Search a business first")
             return
@@ -267,7 +271,7 @@ class GUI:
 
     def handle_eps_graph_button(self):
         try:
-            eps_map = self.create_data_map("historic_eps", "income")
+            eps_map = self.create_data_map("historic_eps")
         except AttributeError:
             self.popup_message("Search a business first")
             return
@@ -282,7 +286,7 @@ class GUI:
 
     def handle_sales_graph_button(self):
         try:
-            sales_map = self.create_data_map("historic_sales", "income")
+            sales_map = self.create_data_map("historic_sales")
         except AttributeError:
             self.popup_message("Search a business first")
             return
@@ -297,7 +301,7 @@ class GUI:
 
     def handle_fcf_graph_button(self):
         try:
-            fcf_map = self.create_data_map("historic_cash", "income")
+            fcf_map = self.create_data_map("historic_cash")
         except AttributeError:
             self.popup_message("Search a business first")
             return
@@ -312,7 +316,7 @@ class GUI:
 
     def handle_roic_graph_button(self):
         try:
-            roic_map = self.create_data_map("historic_roic", "balance")
+            roic_map = self.create_data_map("historic_roic")
         except AttributeError:
             self.popup_message("Search a business first")
             return
@@ -327,7 +331,7 @@ class GUI:
 
     def handle_pe_graph_button(self):
         try:
-            pe_map = self.create_data_map("historic_pe", "balance")
+            pe_map = self.create_data_map("historic_pe")
         except AttributeError:
             self.popup_message("Search a business first")
             return
@@ -342,7 +346,7 @@ class GUI:
 
     def handle_p_fcf_graph_button(self):
         try:
-            p_fcf_map = self.create_data_map("historic_p_fcf", "balance")
+            p_fcf_map = self.create_data_map("historic_p_fcf")
         except AttributeError:
             self.popup_message("Search a business first")
             return
@@ -357,7 +361,7 @@ class GUI:
 
     def handle_debt_equity_graph_button(self):
         try:
-            debt_equity_map = self.create_data_map("historic_debt_equity", "balance")
+            debt_equity_map = self.create_data_map("historic_debt_equity")
         except AttributeError:
             self.popup_message("Search a business first")
             return
@@ -370,40 +374,35 @@ class GUI:
             debt_equity_map
         )
 
-    def create_data_map(self, metric, statement):
+    def create_data_map(self, metric):
         data_map = {}
         historic_data = getattr(self, metric)
 
-        if statement == "balance":
-            year_list = getattr(self, "balance_year_list")
-            for i in range(len(year_list)):
-                data_map[year_list[i]] = historic_data[i + 1]
-        else:
-            year_list = getattr(self, "income_year_list")
-            for i in range(len(year_list)):
-                data_map[year_list[i]] = historic_data[i]
+        year_list = getattr(self, "income_year_list")
+        for i in range(len(year_list)):
+            data_map[year_list[i]] = historic_data[i]
 
         return data_map
 
     #  Get/set
     def get_stock_info(self, ticker):
+        self.scraping = True
         income_statement = get_income_statement(ticker)
         ttm_income_statement = get_ttm_income_statement(ticker)
         balance_sheet = get_balance_sheet(ticker)
         ratios_and_metrics = get_ratios(ticker)
         cash_flow_statement = get_cash_flow_statement(ticker)
-        income_years_available, income_year_list = get_income_years_available(income_statement)
-        balance_years_available, balance_year_list = get_balance_years_available(balance_sheet)
+        analyst_estimated_growth = get_analyst_5_year_growth_prediction(ticker)
+        self.scraping = False
+        years_available, income_year_list = get_years_available(income_statement)
+        # balance_years_available, balance_year_list = get_balance_years_available(balance_sheet)
 
-        print(f"balance years av: {income_year_list}")
-        print(f"income years av: {balance_year_list}")
 
-        # analyst_estimated_growth = get_analyst_5_year_growth_prediction(ticker)
         setattr(self, "income_year_list", income_year_list)
-        setattr(self, "balance_year_list", balance_year_list)
-        self.set_summary(income_statement)
-        self.set_growth(income_statement, balance_sheet, income_years_available, balance_years_available)
-        # self.set_ratios(ratios_and_metrics, balance_years_available)
+        setattr(self, "balance_year_list", income_year_list)
+        self.set_summary(ttm_income_statement, analyst_estimated_growth)
+        self.set_growth(income_statement, balance_sheet, years_available, cash_flow_statement)
+        self.set_ratios(ratios_and_metrics, years_available)
 
     def set_entry_data(self, entry_name, data):
         entry = getattr(self, entry_name)
@@ -431,42 +430,39 @@ class GUI:
         self.set_entry_data("sticker_no_mos", "")
         self.set_entry_data("sticker_with_mos", "")
 
-    def set_summary(self, ttm_income_statement):
+    def set_summary(self, ttm_income_statement, analyst_growth_est):
         name, price = get_company_name_and_price(ttm_income_statement)
         market_cap = get_market_cap(ttm_income_statement, price)
         ttm_fcf = get_ttm_fcf(ttm_income_statement)
         ttm_eps = get_ttm_eps(ttm_income_statement)
-        print(f"name: {name}")
-        print(f"price: {price}")
-        print(f"market cap: {market_cap}")
 
         self.set_entry_data("name_data", name)
-        # self.set_entry_data("est_growth_data", analyst_growth_est)
+        self.set_entry_data("est_growth_data", analyst_growth_est)
         self.set_entry_data("cap_data", market_cap)
         self.set_entry_data("price_data", price)
         self.set_entry_data("fcf_data", ttm_fcf)
         self.set_entry_data("eps_data", ttm_eps)
 
-    def set_growth(self, income_statement, balance_sheet, income_years_available, balance_years_available):
-        equity_averages, all_equity = get_equity_growth_rates(balance_sheet, balance_years_available)
+    def set_growth(self, income_statement, balance_sheet, years_available, cash_flow_statement):
+        equity_averages, all_equity = get_equity_growth_rates(balance_sheet, years_available)
         setattr(self, "historic_equity", all_equity)
         self.set_entry_data("one_year_equity", equity_averages[0])
         self.set_entry_data("five_year_equity", equity_averages[1])
         self.set_entry_data("ten_year_equity", equity_averages[2])
 
-        eps_averages, all_eps = get_eps_growth_rates(income_statement, income_years_available)
+        eps_averages, all_eps = get_eps_growth_rates(income_statement, years_available)
         setattr(self, "historic_eps", all_eps)
         self.set_entry_data("one_year_eps", eps_averages[0])
         self.set_entry_data("five_year_eps", eps_averages[1])
         self.set_entry_data("ten_year_eps", eps_averages[2])
 
-        sales_averages, all_sales = get_sales_growth_rates(income_statement, income_years_available)
+        sales_averages, all_sales = get_sales_growth_rates(income_statement, years_available)
         setattr(self, "historic_sales", all_sales)
         self.set_entry_data("one_year_sales", sales_averages[0])
         self.set_entry_data("five_year_sales", sales_averages[1])
         self.set_entry_data("ten_year_sales", sales_averages[2])
 
-        cash_averages, all_cash = get_free_cash_flow_growth_rates(income_statement, income_years_available)
+        cash_averages, all_cash = get_free_cash_flow_growth_rates(cash_flow_statement, years_available)
         setattr(self, "historic_cash", all_cash)
         self.set_entry_data("one_year_cash", cash_averages[0])
         self.set_entry_data("five_year_cash", cash_averages[1])
