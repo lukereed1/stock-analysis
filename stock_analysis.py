@@ -13,7 +13,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
 
-class GUI:
+class StockAnalysis:
     def __init__(self, root):
         self.root = root
         self.scraping = False
@@ -522,8 +522,8 @@ class GUI:
             return
 
         intrinsic_value, intrinsic_value_with_mos = dcfa_calc(growth_rate, ttm_fcf, margin_of_safety, p_fcf_value)
-        self.set_entry_data("intrin_no_mos", add_commas_to_num(intrinsic_value))
-        self.set_entry_data("intrin_with_mos", add_commas_to_num(intrinsic_value_with_mos))
+        self.set_entry_data("intrin_no_mos", add_commas_to_num(intrinsic_value) + "M")
+        self.set_entry_data("intrin_with_mos", add_commas_to_num(intrinsic_value_with_mos) + "M")
 
     def calculate_sticker_price(self):
         ttm_eps = getattr(self, "sticker_eps").get()
@@ -593,7 +593,12 @@ class GUI:
 
 def main():
     root = tk.Tk()
-    app = GUI(root)
+    try:
+        root.tk.call('tk', 'windowingsystem')
+    except tk.TclError:
+        pass
+
+    app = StockAnalysis(root)
     root.mainloop()
 
 
