@@ -251,7 +251,9 @@ class StockAnalysis:
         search_value = getattr(self, "search_bar").get().upper()
         if not search_value.strip():
             self.popup_message("Enter a valid ticker")
-        self.get_stock_info(search_value)
+        stock = self.get_stock_info(search_value)
+        if not stock:
+            return
         self.set_calculators()
 
     def handle_equity_graph_button(self):
@@ -387,8 +389,13 @@ class StockAnalysis:
     #  Get/set
     def get_stock_info(self, ticker):
         self.scraping = True
-        income_statement = get_income_statement(ticker)
         ttm_income_statement = get_ttm_income_statement(ticker)
+        not_found = ttm_income_statement.find("div", string="Page Not Found - 404")
+        if not_found:
+            print("Stock not found")
+            self.scraping = False
+            return False
+        income_statement = get_income_statement(ticker)
         balance_sheet = get_balance_sheet(ticker)
         ratios_and_metrics = get_ratios(ticker)
         cash_flow_statement = get_cash_flow_statement(ticker)
@@ -400,6 +407,7 @@ class StockAnalysis:
         self.set_summary(ttm_income_statement, analyst_estimated_growth)
         self.set_growth(income_statement, balance_sheet, years_available, cash_flow_statement)
         self.set_ratios(ratios_and_metrics, years_available)
+        return True
 
     def set_entry_data(self, entry_name, data):
         entry = getattr(self, entry_name)
