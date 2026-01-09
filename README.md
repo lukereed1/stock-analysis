@@ -9,5 +9,6 @@ Includes a DCFA (Discounted Cash Flow Analysis) and a Sticker Price calculator, 
 - matplotlib
 
 ## Images
-![gui](images/gui.png)
-![chart](images/chart.png)
+![metrics](images/metrics.png)
+![valuation](images/valuation.png)
+![guide](images/guide.png)
