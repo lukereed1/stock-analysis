@@ -10,4 +10,3 @@ Includes a DCFA (Discounted Cash Flow Analysis) and a Sticker Price calculator, 
 ## Images
 ![metrics](images/metrics.png)
 ![valuation](images/valuation.png)
-![guide](images/guide.png)
